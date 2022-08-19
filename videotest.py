@@ -78,7 +78,6 @@ def image_section_generator(vid):
     word_thresh = 250
 
     image_sections = []
-    section_index = 0
     word_count = 1
 
     #dialogue
@@ -116,17 +115,17 @@ def image_section_generator(vid):
                 if curr_frame.dialogue:
                     if prev_frame.word != curr_frame.word and word_nz > word_thresh:
                         end = ms
-                        print('Got ' + stamp)
+                        print('Process at: ' + stamp)
                         image_sections.append({'Index':word_count,'Start':start, 'End':end})
                         start = ms
                         word_count += 1
             else:
                 if curr_frame.dialogue:
                     start = ms
-                    print('Got ' + stamp)
+                    print('Process at: ' + stamp)
                 else:
                     end = ms
-                    print('Got ' + stamp)
+                    print('Process at: ' + stamp)
                     image_sections.append({'Index':word_count,'Start':start, 'End':end, 'CloseWindow':True})
                     word_count += 1
             prev_frame = curr_frame
@@ -141,7 +140,9 @@ def image_section_generator(vid):
 
 if __name__ == '__main__':
 
-    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\tbk_personal2.mp4'
+    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\tbk_personal3.mp4'
 
     image_sec = image_section_generator(video)
-    print(image_sec)
+    print('Image Section')
+    for im in image_sec:
+        print(im)

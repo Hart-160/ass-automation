@@ -243,7 +243,7 @@ def snippet_sections_builder(event_li):
 
 if __name__ == '__main__':
     
-    sce_id = 6010510001
+    sce_id = 6010510003
 
     sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\{}.sce'.format(str(sce_id))
     try:

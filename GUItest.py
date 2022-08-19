@@ -5,7 +5,7 @@ from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showerror, showinfo
 import utils.generate_tmp as tmp
-import utils.tl_substitude as sub
+import ass_writer as aw
 
 def sce_template():
     sce_types = (
@@ -23,36 +23,29 @@ def sce_template():
     except:
         showerror(title = 'Error', message = 'Please check out source code')
 
-def sce_sub():
-    txt_types = (
-        ('txt files', '*.txt'),
-        ('all files', '*.*')
-    )
-    txt_f = fd.askopenfilename(
-        title = 'Open TXT File',
-        initialdir = '/',
-        filetypes = txt_types
-    )
-
+def ass_auto():
     sce_types = (
         ('sce files', '*.sce'),
         ('all files', '*.*')
     )
-    sce_f= fd.askopenfilename(
+    sce_f = fd.askopenfilename(
         title = 'Open SCE File',
         initialdir = '/',
         filetypes = sce_types
     )
 
-    txt_n = os.path.split(txt_f)[1]
-    sce_n = os.path.split(sce_f)[1]
-    txt_name = os.path.splitext(txt_n)[0]
-    sce_name = os.path.splitext(sce_n)[0]
-    if txt_name == sce_name:
-        sub.sce_substitude(txt_f, sce_f)
-        showinfo(title = 'Info', message = 'Work Completed!')
-    else:
-        showerror(title = 'Error', message = 'Files should have the same name')
+    vid_types = (
+        ('mp4 files', '*.mp4'),
+        ('all files', '*.*')
+    )
+    vid_f= fd.askopenfilename(
+        title = 'Open Video File',
+        initialdir = '/',
+        filetypes = vid_types
+    )
+
+    aw.ass_writer(sce_f, vid_f)
+    showinfo(title = 'Info', message = 'Work Completed!')
 
 def center_window(w, h):
     ws = root.winfo_screenwidth()
@@ -80,9 +73,9 @@ tmp_button = ttk.Button(
 
 substitude_button = ttk.Button(
     root,
-    text = 'Substitude tmp to SCE',
+    text = 'Run ASS automation',
     padding=10,
-    command = sce_sub
+    command = ass_auto
 )
 
 tmp_button.pack(expand = True)
