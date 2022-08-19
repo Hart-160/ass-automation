@@ -1,5 +1,4 @@
 import tkinter as tk
-import os
 import ctypes
 from tkinter import ttk
 from tkinter import filedialog as fd

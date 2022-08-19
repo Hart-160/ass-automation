@@ -135,12 +135,44 @@ def image_section_generator(vid):
 
     return image_sections
 
-# 243,1183 1652,1380 x1 y1 x2 y2 (ipad air3) 文本框部分
-# 217 1210 1702 1324 四个点在文本框上
+def jitter_cleaner(img_sections:list):
+    remove_li = []
+    for im in img_sections:
+        if im['End'] - im['Start'] < 1000.0:
+            remove_li.append(im)
+
+    tmp = []
+    remove_subli = []
+    for r in remove_li:
+        img_sections.remove(r)
+        if len(remove_subli) == 0 or remove_subli[-1]['Index'] + 1 == r['Index']:
+            remove_subli.append(r)
+        else:
+            if len(remove_subli) >= 2:
+                tmp.append(remove_subli)
+            remove_subli = [r]
+    if len(remove_subli) >= 2:
+        tmp.append(remove_subli)
+        remove_subli = []
+
+    alert = []
+    count = 0
+    for t in tmp:
+        start = t[0]['Start']
+        end = t[-1]['End']
+        alert.append({'Index':count, 'Start':start, 'End':end, 'Jitter':True})
+
+    for i in range(len(img_sections)):
+        img = img_sections[i]
+        img['Index'] = i+1
+
+    return img_sections, alert
 
 if __name__ == '__main__':
+    # 243,1183 1652,1380 x1 y1 x2 y2 (ipad air3) 文本框部分
+    # 217 1210 1702 1324 四个点在文本框上
 
-    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\tbk_personal3.mp4'
+    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\tbk_bride.mp4'
 
     image_sec = image_section_generator(video)
     print('Image Section')

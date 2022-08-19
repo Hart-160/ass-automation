@@ -1,6 +1,6 @@
 def shader_builder(length:int):
-    x1b = 496
-    x2b = x3b = 513
+    x1b = 495
+    x2b = x3b = 512
     var = 46
 
     x1 = x1b + var * length
@@ -13,9 +13,7 @@ def shader_builder(length:int):
 
     return effect + shelter_template
 
-'''
-WIP 参数读取转换为读取settings.txt文件
-'''
+#TODO 参数读取转换为读取settings.txt文件
 
 class ASS_Line(object):
     def __init__(self, start:str, end:str, name:str = None, text:str = None) -> None:
@@ -66,9 +64,11 @@ class Shader(ASS_Line):
         self.layer = 0
         self.style = 'D4DJ shader'
 
+class Caution(ASS_Line):
+    def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
+        super().__init__(start, end, name, text)
+        self.layer = 1
+        self.style = 'CAUTION'
+
 if __name__ == '__main__':
-    t = shader_builder(1)
-    dial = Shader(0, '0:00:00.00', '0:00:05.00', 'SCE', 'Hiroma', t)
-    #dial = ASS_Line(0,'0:00:13.70','0:00:21.55','screen','screen','hahaha\\Nhaha')
-    print(dial.build_dialogue())
-    #print(dial.build_comment())
+    pass

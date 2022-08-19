@@ -101,15 +101,6 @@ def sce_handler(route) -> list:
                     jit.time = float(time)
                 event_list.append(jit.get_dict())
 
-            '''
-            elif gt.SCEwords.font_size in line:
-                # 判断字体大小变化
-                temp = line.replace(gt.SCEwords.font_size, '')
-                fs = temp.replace(gt.SCEwords.end, '')
-                font_size = ct.FontSizeChange(index, fs)
-                event_list.append(font_size.get_dict())
-            '''
-
         elif line.startswith(gt.SCEwords.speaker):
             # 判断对话（有明显说话人提示）
             temp = line.replace(gt.SCEwords.speaker, '')
@@ -196,54 +187,9 @@ def sce_handler(route) -> list:
     
     return event_list
 
-def snippet_sections_builder(event_li):
-    '''
-    输入event_list，返回snippet sections列表供image sections对比
-    '''
-    li = []
-    res = []
-    section_index = 0
-    for event in event_li:
-        if event['EventType'] == 'OpenWindow' or event['EventType'] == 'CloseWindow' or event['EventType'] == 'Jitter':
-            li.append(event)
-    for i in range(len(li)):
-        line = li[i]
-        if line['EventType'] == 'CloseWindow':
-            if li[i-1]['EventType'] != 'Jitter':
-                word_count = line['Index'] - li[i-1]['Index'] + 1
-                if line['Index'] == li[i-1]['Index']:
-                    word_count = 1
-                elif li[i-1]['EventType'] == 'OpenWindow' and line['Index'] - li[i-1]['Index'] == 1:
-                    word_count = 2
-                section_index += 1
-                section = {'Index':section_index, 'WordCount':word_count}
-                res.append(section)
-            else:
-                if li[i-1]['EventType'] != 'OpenWindow' and line['Index'] == li[i-1]['Index']:
-                    continue
-                word_count = line['Index'] - li[i-1]['Index']
-                if line['Index'] - li[i-1]['Index'] == 1:
-                    word_count += 1
-                section_index += 1
-                section = {'Index':section_index, 'WordCount':word_count}
-                res.append(section)
-        elif line['EventType'] == 'Jitter':
-            word_count = line['Index'] - li[i-1]['Index'] + 1
-            if li[i-1]['EventType'] == 'OpenWindow' and line['Index'] == li[i-1]['Index']:
-                continue
-            if line['Index'] == li[i-1]['Index']:
-                word_count = 1
-            elif li[i-1]['EventType'] == 'Jitter':
-                word_count -= 1
-            section_index += 1
-            section = {'Index':section_index, 'WordCount':word_count}
-            res.append(section)
-
-    return res
-
 if __name__ == '__main__':
     
-    sce_id = 6010510003
+    sce_id = 3040510011
 
     sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\{}.sce'.format(str(sce_id))
     try:

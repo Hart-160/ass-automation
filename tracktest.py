@@ -1,8 +1,8 @@
 import cv2
 import numpy as np
 
-vid = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\test.mp4'
-pic = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\test.jpg'
+#vid = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\test.mp4'
+pic = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\test.png'
 
 img = cv2.imread(pic)
 cv2.namedWindow('Track')
