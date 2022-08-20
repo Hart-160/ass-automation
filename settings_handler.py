@@ -1,18 +1,32 @@
 import os
 
 class Settings(object):
-    def __init__(self) -> None:
-        with open('settings.txt', 'r', encoding='utf-8') as setting:
-            self.li = setting.readlines()
+    SAMPLE_ASS_PATH = '[Sample ASS Path]'
+    DEFAULT_REFERENCE_PATH = '[Default Reference Path]'
 
-    def settings_reader(self, parameter):
-        for i in range(len(self.li)):
-            if parameter in self.li[i]:
-                return self.li[i+1]
+    def settings_reader(parameter):
+        with open('settings.txt', 'r', encoding='utf-8') as f:
+            li = f.readlines()
+
+        for i in range(len(li)):
+            if parameter in li[i]:
+                return li[i+1]
 
 class Reference(object):
-    def __init__(self) -> None:
-        pass
+    SCREEN_TEXT = '[SCREEN TEXT]'
+    SCREEN_INITIAL = '[SCREEN INITIAL]'
+    SCREEN_VARIABLE = '[SCREEN VARIABLE]'
+    TEXT_WORD_MX = '[TEXT WORD MX]'
+    TEXT_BORDER_MX = '[TEXT BORDER MX]'
+
+    def reference_reader(parameter):
+        with open(Settings.settings_reader(Settings.DEFAULT_REFERENCE_PATH), 'r', encoding='utf-8') as f:
+            li = f.readlines()
+
+        for i in range(len(li)):
+            if parameter in li[i]:
+                return li[i+1]
 
 if __name__ == '__main__':
-    pass
+    print(Settings.settings_reader(Settings.DEFAULT_REFERENCE_PATH))
+    print(Reference.reference_reader(Reference.SCREEN_TEXT))

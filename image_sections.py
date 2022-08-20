@@ -169,12 +169,4 @@ def jitter_cleaner(img_sections:list):
     return img_sections, alert
 
 if __name__ == '__main__':
-    # 243,1183 1652,1380 x1 y1 x2 y2 (ipad air3) 文本框部分
-    # 217 1210 1702 1324 四个点在文本框上
-
-    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\tbk_bride.mp4'
-
-    image_sec = image_section_generator(video)
-    print('Image Section')
-    for im in image_sec:
-        print(im)
+    pass

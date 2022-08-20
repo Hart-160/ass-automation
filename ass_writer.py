@@ -27,7 +27,7 @@ def ass_writer(sce, video):
     for di, im in zip(dialogue_list, im_sections):
         if 'CloseWindow' in im:
             for ch in change_windows:
-                if ch['Index'] == im['Index'] and ch['Color'] == '黒':
+                if 'Color' in ch and ch['Index'] == im['Index']:
                     end = im['End'] - 100
                     naming = 'BlackFade'
                     extra_fad = '{\\fad(0,600)}'
@@ -81,8 +81,4 @@ def ass_writer(sce, video):
     print('Process Completed!')
 
 if __name__ == '__main__':
-    sce_id = 3040510011
-    sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\{}.sce'.format(str(sce_id))
-    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\tbk_bride.mp4'
-
-    ass_writer(sce, video)
+    pass

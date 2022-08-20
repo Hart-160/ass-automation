@@ -176,3 +176,6 @@ def clean_sce(pth) -> str:
 def sce_to_template(pth):
     filepath = clean_sce(pth)
     txt_to_template(filepath)
+
+if __name__ == '__main__':
+    pass

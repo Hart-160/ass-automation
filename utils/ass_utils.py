@@ -13,8 +13,6 @@ def shader_builder(length:int):
 
     return effect + shelter_template
 
-#TODO 参数读取转换为读取settings.txt文件
-
 class ASS_Line(object):
     def __init__(self, start:str, end:str, name:str = None, text:str = None) -> None:
         self.layer = 0

@@ -92,3 +92,5 @@ class Jitter(Event):
             self.time = float(self.time)
             return {'Index':self.index, 'EventType':self.event_type, 'Time':self.time}
 
+if __name__ == '__main__':
+    pass

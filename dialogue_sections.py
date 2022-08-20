@@ -188,15 +188,4 @@ def sce_handler(route) -> list:
     return event_list
 
 if __name__ == '__main__':
-    
-    sce_id = 2000660003
-
-    sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\{}.sce'.format(str(sce_id))
-    try:
-        event_list = sce_handler(sce)
-        #print(event_list)
-        for e in event_list:
-            print(e)
-
-    except FileNotFoundError:
-        print('SCE does not exist!')
+    pass
