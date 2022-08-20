@@ -1,4 +1,4 @@
-import utils.classtest as ct
+import utils.dialogue_classify as ct
 import utils.generate_tmp as gt
 
 def clean_text(text:str) -> str:
@@ -189,7 +189,7 @@ def sce_handler(route) -> list:
 
 if __name__ == '__main__':
     
-    sce_id = 3040510011
+    sce_id = 2000660003
 
     sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\{}.sce'.format(str(sce_id))
     try:

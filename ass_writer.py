@@ -1,6 +1,6 @@
-from classifytest import sce_handler
-from videotest import image_section_generator, get_tstamp, jitter_cleaner
-import utils.ass_param as ap
+from dialogue_sections import sce_handler
+from image_sections import image_section_generator, get_tstamp, jitter_cleaner
+import utils.ass_utils as au
 import os
 import shutil
 
@@ -15,12 +15,6 @@ def ass_writer(sce, video):
     ass_dialogue = []
     ass_shader = []
     ass_alert = []
-
-    '''
-    WIP 不同分辨率适配
-
-    WIP 抖动支持
-    '''
 
     for d in ev_sections:
         if d['EventType'] == 'Dialogue':
@@ -45,11 +39,11 @@ def ass_writer(sce, video):
                     extra_fad = '{\\fad(0,50)}'
                     text_fad = '{\\fad(0,50)}'
                     break
-            line = ap.Dialogue(get_tstamp(im['Start']), get_tstamp(end), di['Talker'], text = text_fad + di['Body'])
-            shader = ap.Shader(get_tstamp(im['Start']), get_tstamp(end), name=naming, text=extra_fad + ap.shader_builder(len(di['Talker'])))
+            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(end), di['Talker'], text = di['Body'] + text_fad)
+            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(end), name=naming, text=au.shader_builder(len(di['Talker'])) + extra_fad)
         else:
-            line = ap.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], di['Body'])
-            shader = ap.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), text=ap.shader_builder(len(di['Talker'])))
+            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], di['Body'])
+            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), text=au.shader_builder(len(di['Talker'])))
         shader = shader.build_comment()
         ass_shader.append(shader)
         line = line.build_dialogue()
@@ -57,7 +51,7 @@ def ass_writer(sce, video):
 
     for ti in title_list:
         tit_count = int(0)
-        title = ap.Title(get_tstamp(0), get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
+        title = au.Title(get_tstamp(0), get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
         title = title.build_dialogue()
         modify_index = int(tit_count) - 1
         ind = int(ti['Index']) + modify_index
@@ -65,7 +59,7 @@ def ass_writer(sce, video):
         tit_count += int(1)
 
     for a in alert_li:
-        alert = ap.Caution(get_tstamp(a['Start']), get_tstamp(a['End']), 'JITTER', 'PLEASE TAKE NOTICE')
+        alert = au.Caution(get_tstamp(a['Start']), get_tstamp(a['End']), 'JITTER', 'PLEASE TAKE NOTICE')
         alert = alert.build_comment()
         ass_alert.append(alert)
 
