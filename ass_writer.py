@@ -1,16 +1,20 @@
-from dialogue_sections import sce_handler
+from dialogue_sections import sce_handler, tl_substitude
 from image_sections import image_section_generator, get_tstamp, jitter_cleaner
-import utils.ass_utils as au
+import ass_utils as au
+import settings_handler as sh
 import os
 import shutil
 
-def ass_writer(sce, video):
-    ev_sections = sce_handler(sce)
+def ass_writer(sce, video, template=None):
     im_sections, alert_li = jitter_cleaner(image_section_generator(video))
+    ev_sections = sce_handler(sce)
+    if template != None:
+        ev_sections = tl_substitude(template, sce_handler(sce))
 
     dialogue_list = []
     title_list = []
     change_windows = []
+    colorfade_li = []
 
     ass_dialogue = []
     ass_shader = []
@@ -21,26 +25,25 @@ def ass_writer(sce, video):
             dialogue_list.append(d)
         if d['EventType'] == 'Title' or d['EventType'] == 'Subtitle':
             title_list.append(d)
-        if d['EventType'] == 'OpenWindow' or d['EventType'] == 'CloseWindow':
+        if d['EventType'] == 'CloseWindow':
             change_windows.append(d)
+
+    for ch in change_windows:
+        if 'Color' in ch:
+            colorfade_li.append(ch['Index'])
 
     for di, im in zip(dialogue_list, im_sections):
         if 'CloseWindow' in im:
-            for ch in change_windows:
-                if 'Color' in ch and ch['Index'] == im['Index']:
-                    end = im['End'] - 100
-                    naming = 'BlackFade'
-                    extra_fad = '{\\fad(0,600)}'
-                    text_fad = '{\\fad(0,500)}'
-                    break
-                else:
-                    end = im['End'] + 50
-                    naming = 'NormalClose'
-                    extra_fad = '{\\fad(0,50)}'
-                    text_fad = '{\\fad(0,50)}'
-                    break
-            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(end), di['Talker'], text = di['Body'] + text_fad)
-            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(end), name=naming, text=au.shader_builder(len(di['Talker'])) + extra_fad)
+            if 'Color' in ch and im['Index'] in colorfade_li:
+                naming = 'BlackFade'
+                extra_fad = '{\\fad(0,600)}'
+                text_fad = '{\\fad(0,500)}'
+            else:
+                naming = 'NormalClose'
+                extra_fad = '{\\fad(0,50)}'
+                text_fad = '{\\fad(0,50)}'
+            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], text = di['Body'] + text_fad)
+            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), name=naming, text=au.shader_builder(len(di['Talker'])) + extra_fad)
         else:
             line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], di['Body'])
             shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), text=au.shader_builder(len(di['Talker'])))
@@ -59,15 +62,15 @@ def ass_writer(sce, video):
         tit_count += int(1)
 
     for a in alert_li:
-        alert = au.Caution(get_tstamp(a['Start']), get_tstamp(a['End']), 'JITTER', 'PLEASE TAKE NOTICE')
+        alert = au.Caution(get_tstamp(a['Start']), get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
         alert = alert.build_comment()
         ass_alert.append(alert)
 
-    src = '[1920x1440]untitled.ass'
+    src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH)
     route, name = os.path.split(video)
     shutil.copy(src, route)
     old_name = os.path.join(route, src)
-    new_name = video + '.ass'
+    new_name = video.replace('.mp4', '.ass')
     os.rename(old_name, new_name)
 
     with open(new_name, 'a+', encoding='utf-8') as a:
@@ -81,4 +84,9 @@ def ass_writer(sce, video):
     print('Process Completed!')
 
 if __name__ == '__main__':
-    pass
+    scenario = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\2000770001.sce'
+    vid = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\iphone10_test.mp4'
+    #tmpl = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\6010510002.txt'
+
+    ass_writer(scenario, vid)
+    #ass_writer(scenario, vid, template=tmpl)

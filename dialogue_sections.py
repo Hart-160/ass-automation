@@ -1,5 +1,5 @@
-import utils.dialogue_classify as ct
-import utils.generate_tmp as gt
+import dialogue_classify as ct
+import generate_tmp as gt
 
 def clean_text(text:str) -> str:
     li = text.split('＠')
@@ -187,5 +187,36 @@ def sce_handler(route) -> list:
     
     return event_list
 
+def tl_substitude(template, ev_list):
+    '''
+    输入翻译模板路径和event list，返回替换翻译后的event list
+    '''
+    with open(template, 'r', encoding='utf-8') as f:
+        tem = f.readlines()
+
+    tmp_li = []
+    for tm in tem:
+        tm = tm.replace('\n', '')
+        tm = tm.split(':')
+        tmp_li.append(tm)
+
+    ori_li = []
+    for e in ev_list:
+        if e['EventType'] == 'Title':
+            ori_li.append(e)
+        if e['EventType'] == 'Subtitle':
+            ori_li.append(e)
+        if e['EventType'] == 'Dialogue':
+            ori_li.append(e)
+
+    for tmp, ori in zip(tmp_li, ori_li):
+        ori['Body'] = tmp[1]
+
+    return ev_list
+
 if __name__ == '__main__':
-    pass
+    sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\6010510002.sce'
+    t = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\6010510002.txt'
+    li = tl_substitude(t, sce_handler(sce))
+    for s in li:
+        print(s)

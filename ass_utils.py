@@ -1,15 +1,16 @@
-def shader_builder(length:int):
-    x1b = 495
-    x2b = x3b = 512
-    var = 46
+import settings_handler as sh
 
-    x1 = x1b + var * length
-    x2 = x2b + var * length
-    x3 = x3b + var * length
+def shader_builder(length:int):
+    x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL))
+    x3b = x2b
+    var = 48
+
+    x1 = x1b + int(var) * length
+    x2 = x2b + int(var) * length
+    x3 = x3b + int(var) * length
 
     effect = '{\\p1}'
-    shelter_template = 'm 242 1182 l {0} 1182 {1} 1164 {2} 1149 1683 1149 1688 1150 1691 1151 1698 1159 1700 1165 1700 1182 1700 1330 1699 1334 1697 1338 1694 1342 1647 1389 1639 1391 244 1391 230 1389 224 1384 222 1379 220 1376 220 1209 222 1203 224 1200'.format(x1, x2, x3)
-    #0char: 496, 513, 513 (+44 per char)
+    shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT).format(x1, x2, x3)
 
     return effect + shelter_template
 

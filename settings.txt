@@ -1,5 +1,14 @@
 [Sample ASS Path]
-[1920x1440]untitled.ass
+[2344x1080]untitled.ass
 
 [Default Reference Path]
-[1920x1440]reference.txt
+[2344x1080]reference.txt
+
+[Open Box Offset] ms
+0
+
+[Normal Close Offset] ms
+0
+
+[Black Fade-in Offset] ms
+0

@@ -1,7 +1,11 @@
 import numpy as np
 import cv2
+import settings_handler as sh
 
 def get_tstamp(milliseconds) -> str:
+    '''
+    将视频进行时的毫秒数转化为aegisub中的时间戳
+    '''
     seconds = milliseconds//1000
     milliseconds = milliseconds%1000
 
@@ -24,6 +28,9 @@ def get_tstamp(milliseconds) -> str:
     return tstamp
 
 def read_pixel(frame, x1, x2, y1, y2):
+    '''
+    判断四个点是否为白色，如果四个都是，返回true，否则返回false
+    '''
     yes = 0
     is_dialogue = False
     if frame[y1, x1] == 255:
@@ -39,6 +46,9 @@ def read_pixel(frame, x1, x2, y1, y2):
     return is_dialogue
 
 class ImageData(object):
+    '''
+    对一帧进行对话框和文字判定
+    '''
     def __init__(self, image) -> None:
         self.image = image
 
@@ -73,24 +83,17 @@ class ImageData(object):
 def image_section_generator(vid):
     '''
     输入视频路径，返回一个包含各节点的列表
-    暂不支持包含抖动的视频
     '''
     word_thresh = 250
 
     image_sections = []
     word_count = 1
 
-    #dialogue
-    x1 = 217
-    y1 = 1210
-    x2 = 1702
-    y2 = 1324
+    #border
+    x1,y1,x2,y2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_BORDER_MX))
 
-    #word
-    x_1 = 243
-    y_1 = 1183
-    x_2 = 1652
-    y_2 = 1380
+    #dialogue
+    x_1,y_1,x_2,y_2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_WORD_MX))
     
     cap = cv2.VideoCapture(vid)
     success, p_frame = cap.read()
@@ -100,6 +103,7 @@ def image_section_generator(vid):
 
     start = ''
     end = ''
+    process_count = 0
 
     while success:
         try:
@@ -115,17 +119,23 @@ def image_section_generator(vid):
                 if curr_frame.dialogue:
                     if prev_frame.word != curr_frame.word and word_nz > word_thresh:
                         end = ms
-                        print('Process at: ' + stamp)
+                        process_count += 1
+                        if process_count % 10 == 0:    
+                            print('Process at: ' + stamp)
                         image_sections.append({'Index':word_count,'Start':start, 'End':end})
                         start = ms
                         word_count += 1
             else:
                 if curr_frame.dialogue:
                     start = ms
-                    print('Process at: ' + stamp)
+                    process_count += 1
+                    if process_count % 10 == 0:    
+                            print('Process at: ' + stamp)
                 else:
                     end = ms
-                    print('Process at: ' + stamp)
+                    process_count += 1
+                    if process_count % 10 == 0:    
+                            print('Process at: ' + stamp)
                     image_sections.append({'Index':word_count,'Start':start, 'End':end, 'CloseWindow':True})
                     word_count += 1
             prev_frame = curr_frame
@@ -136,6 +146,11 @@ def image_section_generator(vid):
     return image_sections
 
 def jitter_cleaner(img_sections:list):
+    '''
+    输入image sections，返回清理后的image sections和警告列表
+
+    清除时间过短的视频分段，合并连续的过段分段并从主列表清除，另添加至警告列表
+    '''
     remove_li = []
     for im in img_sections:
         if im['End'] - im['Start'] < 1000.0:

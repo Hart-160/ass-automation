@@ -3,7 +3,7 @@ import ctypes
 from tkinter import ttk
 from tkinter import filedialog as fd
 from tkinter.messagebox import showerror, showinfo
-import utils.generate_tmp as tmp
+import generate_tmp as tmp
 import ass_writer as aw
 
 def sce_template():
