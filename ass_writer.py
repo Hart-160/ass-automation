@@ -5,7 +5,8 @@ import settings_handler as sh
 import os
 import shutil
 
-def ass_writer(sce, video, template=None):
+def write_ass(sce, video, template=None):
+    print('Started...')
     im_sections, alert_li = jitter_cleaner(image_section_generator(video))
     ev_sections = sce_handler(sce)
     if template != None:
@@ -40,9 +41,9 @@ def ass_writer(sce, video, template=None):
                 text_fad = '{\\fad(0,500)}'
             else:
                 naming = 'NormalClose'
-                extra_fad = '{\\fad(0,50)}'
-                text_fad = '{\\fad(0,50)}'
-            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], text = di['Body'] + text_fad)
+                extra_fad = '{\\fad(0,100)}'
+                text_fad = '{\\fad(0,100)}'
+            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], text = text_fad + di['Body'])
             shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), name=naming, text=au.shader_builder(len(di['Talker'])) + extra_fad)
         else:
             line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], di['Body'])
@@ -70,7 +71,7 @@ def ass_writer(sce, video, template=None):
     route, name = os.path.split(video)
     shutil.copy(src, route)
     old_name = os.path.join(route, src)
-    new_name = video.replace('.mp4', '.ass')
+    new_name = video + '.ass'
     os.rename(old_name, new_name)
 
     with open(new_name, 'a+', encoding='utf-8') as a:
@@ -81,12 +82,9 @@ def ass_writer(sce, video, template=None):
         for dial in ass_dialogue:
             a.write(dial + '\n')
 
-    print('Process Completed!')
-
 if __name__ == '__main__':
-    scenario = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\2000770001.sce'
-    vid = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\iphone10_test.mp4'
-    #tmpl = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\6010510002.txt'
+    sce = 'E:\\自制视频\\D4DJ剧情翻译\\广间Hiroma\\三宅葵依80期四星\\54 - 三宅葵依 - ★4 Legato Harmonies.sce'
+    vid = 'E:\\自制视频\\D4DJ剧情翻译\\广间Hiroma\\三宅葵依80期四星\\aoi80.mp4'
+    temp = 'E:\\自制视频\\D4DJ剧情翻译\\广间Hiroma\\三宅葵依80期四星\\三宅葵依 Legato Harmonies.txt'
 
-    ass_writer(scenario, vid)
-    #ass_writer(scenario, vid, template=tmpl)
+    write_ass(sce, vid, template=temp)

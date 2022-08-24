@@ -44,5 +44,4 @@ class Reference(object):
         return int(x1), int(y1), int(x2), int(y2)
 
 if __name__ == '__main__':
-    #print(Settings.settings_reader(Settings.DEFAULT_REFERENCE_PATH))
-    print(Settings.settings_reader(Settings.SAMPLE_ASS_PATH))
+    pass

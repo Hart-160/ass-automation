@@ -121,6 +121,7 @@ def image_section_generator(vid):
                         end = ms
                         process_count += 1
                         if process_count % 10 == 0:    
+                            pass
                             print('Process at: ' + stamp)
                         image_sections.append({'Index':word_count,'Start':start, 'End':end})
                         start = ms
@@ -130,12 +131,15 @@ def image_section_generator(vid):
                     start = ms
                     process_count += 1
                     if process_count % 10 == 0:    
-                            print('Process at: ' + stamp)
+                        pass
+                        print('Process at: ' + stamp)
                 else:
                     end = ms
+                    spec = {}
                     process_count += 1
                     if process_count % 10 == 0:    
-                            print('Process at: ' + stamp)
+                        pass
+                        print('Process at: ' + stamp)
                     image_sections.append({'Index':word_count,'Start':start, 'End':end, 'CloseWindow':True})
                     word_count += 1
             prev_frame = curr_frame

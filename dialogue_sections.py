@@ -215,8 +215,4 @@ def tl_substitude(template, ev_list):
     return ev_list
 
 if __name__ == '__main__':
-    sce = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\sce\\6010510002.sce'
-    t = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\6010510002.txt'
-    li = tl_substitude(t, sce_handler(sce))
-    for s in li:
-        print(s)
+    pass
