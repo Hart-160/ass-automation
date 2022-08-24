@@ -1,8 +1,8 @@
 from PySide2.QtWidgets import *
 from PySide2.QtUiTools import QUiLoader
 import generate_tmp as gt
+import os
 from ass_writer import write_ass
-
 class Entrance:
 
     def __init__(self):
@@ -45,7 +45,11 @@ class Generate_TMP:
             QMessageBox.critical(self.ui, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
             gt.sce_to_template(sce)
-            QMessageBox.information(self.ui, '任务完成', '模板已经生成！', QMessageBox.Ok, QMessageBox.Ok)
+            rout, name = os.path.split(sce)
+            sole_name= os.path.splitext(name)[0]
+            new_name = '\\[TEMPLATE] ' + sole_name + '.txt'
+            os.rename(rout + '\\' + sole_name + '.txt', rout + new_name)
+            QMessageBox.information(self.ui, '任务完成', '模板已成功生成！', QMessageBox.Ok, QMessageBox.Ok)
 
     def generateText(self):
         sce = self.ui.sce_route.text()
@@ -53,7 +57,11 @@ class Generate_TMP:
             QMessageBox.critical(self.ui, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
             gt.clean_sce(sce)
-            QMessageBox.information(self.ui, '任务完成', '文本已经提取！', QMessageBox.Ok, QMessageBox.Ok)
+            rout, name = os.path.split(sce)
+            sole_name= os.path.splitext(name)[0]
+            new_name = '\\[TEXT] ' + sole_name + '.txt'
+            os.rename(rout + '\\' + sole_name + '.txt', rout + new_name)
+            QMessageBox.information(self.ui, '任务完成', '文本已成功提取！', QMessageBox.Ok, QMessageBox.Ok)
 
 class ASS_Automation:
 
@@ -65,9 +73,9 @@ class ASS_Automation:
         self.ui.choose_sce.clicked.connect(self.select_sce)
         self.ui.choose_template.clicked.connect(self.select_template)
 
-        self.ui.video_route.setPlaceholderText('视频文件为必填项')
-        self.ui.sce_route.setPlaceholderText('SCE文件为必填项')
-        self.ui.template_route.setPlaceholderText('模板为可选项')
+        self.ui.video_route.setPlaceholderText('视频文件为必填项，请确保与其余两项对应')
+        self.ui.sce_route.setPlaceholderText('SCE文件为必填项，请确保与其余两项对应')
+        self.ui.template_route.setPlaceholderText('模板为可选项，请确保与其余两项对应')
 
         #button below
         self.ui.generate.clicked.connect(self.run)

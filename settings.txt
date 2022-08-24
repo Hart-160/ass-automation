@@ -5,10 +5,10 @@
 [1920x1440]reference.txt
 
 [Open Box Offset] ms
-0
+80
 
 [Normal Close Offset] ms
-0
+-40
 
 [Black Fade-in Offset] ms
-0
+500

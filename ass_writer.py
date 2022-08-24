@@ -39,15 +39,21 @@ def write_ass(sce, video, template=None):
                 naming = 'BlackFade'
                 extra_fad = '{\\fad(0,600)}'
                 text_fad = '{\\fad(0,500)}'
+                offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
             else:
                 naming = 'NormalClose'
                 extra_fad = '{\\fad(0,100)}'
                 text_fad = '{\\fad(0,100)}'
-            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], text = text_fad + di['Body'])
-            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), name=naming, text=au.shader_builder(len(di['Talker'])) + extra_fad)
+                offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
+            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End'] + offset), di['Talker'], text = text_fad + di['Body'])
+            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End'] + offset), name=naming, text=au.shader_builder(len(di['Talker'])) + extra_fad)
         else:
-            line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End']), di['Talker'], di['Body'])
-            shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End']), text=au.shader_builder(len(di['Talker'])))
+            if 'OpenWindow' in im:
+                offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
+            else:
+                offset = 0
+            line = au.Dialogue(get_tstamp(im['Start'] + offset), get_tstamp(im['End']), di['Talker'], di['Body'])
+            shader = au.Shader(get_tstamp(im['Start'] + offset), get_tstamp(im['End']), text=au.shader_builder(len(di['Talker'])))
         shader = shader.build_comment()
         ass_shader.append(shader)
         line = line.build_dialogue()
@@ -82,9 +88,9 @@ def write_ass(sce, video, template=None):
         for dial in ass_dialogue:
             a.write(dial + '\n')
 
-if __name__ == '__main__':
-    sce = 'E:\\自制视频\\D4DJ剧情翻译\\广间Hiroma\\三宅葵依80期四星\\54 - 三宅葵依 - ★4 Legato Harmonies.sce'
-    vid = 'E:\\自制视频\\D4DJ剧情翻译\\广间Hiroma\\三宅葵依80期四星\\aoi80.mp4'
-    temp = 'E:\\自制视频\\D4DJ剧情翻译\\广间Hiroma\\三宅葵依80期四星\\三宅葵依 Legato Harmonies.txt'
+    print('Completed!')
+    if len(im_sections) != len(dialogue_list):
+        print('There is {} line shifted. Please take a notice!'.format(abs(len(dialogue_list) - len(im_sections))))
 
-    write_ass(sce, vid, template=temp)
+if __name__ == '__main__':
+    pass

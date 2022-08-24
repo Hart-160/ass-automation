@@ -27,7 +27,6 @@ def clean_text(text) -> str:
     return res
 
 def txt_to_template(route):
-    #new_route = route
 
     with open(route, 'r+', encoding='utf-8') as original:
         li = original.readlines()

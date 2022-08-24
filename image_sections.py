@@ -76,15 +76,18 @@ class ImageData(object):
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
         self.word_nz = np.count_nonzero(img)
-        if self.word_nz != 0:
+        if self.word_nz >= 50:
             self.word = bool(True)
         return self.word
+
+def Merge(dict1, dict2): 
+    res = {**dict1, **dict2} 
+    return res 
 
 def image_section_generator(vid):
     '''
     输入视频路径，返回一个包含各节点的列表
     '''
-    word_thresh = 250
 
     image_sections = []
     word_count = 1
@@ -104,6 +107,7 @@ def image_section_generator(vid):
     start = ''
     end = ''
     process_count = 0
+    spec = {}
 
     while success:
         try:
@@ -113,34 +117,38 @@ def image_section_generator(vid):
             curr_frame = ImageData(c_frame)
             curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
             curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
-            word_nz = prev_frame.word_nz - curr_frame.word_nz
             
             if curr_frame.dialogue == prev_frame.dialogue:
                 if curr_frame.dialogue:
-                    if prev_frame.word != curr_frame.word and word_nz > word_thresh:
+                    if prev_frame.word != curr_frame.word:
                         end = ms
                         process_count += 1
-                        if process_count % 10 == 0:    
-                            pass
+                        if process_count % 8 == 0:    
                             print('Process at: ' + stamp)
-                        image_sections.append({'Index':word_count,'Start':start, 'End':end})
+                        if spec == {}:
+                            image_sections.append({'Index':word_count,'Start':start, 'End':end})
+                        else:
+                            image_sections.append(Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                         start = ms
+                        spec = {}
                         word_count += 1
             else:
                 if curr_frame.dialogue:
                     start = ms
+                    spec = {'OpenWindow':True}
                     process_count += 1
-                    if process_count % 10 == 0:    
-                        pass
+                    if process_count % 8 == 0:    
                         print('Process at: ' + stamp)
                 else:
                     end = ms
-                    spec = {}
+                    spec = {'CloseWindow':True}
                     process_count += 1
-                    if process_count % 10 == 0:    
-                        pass
+                    if process_count % 8 == 0:    
                         print('Process at: ' + stamp)
-                    image_sections.append({'Index':word_count,'Start':start, 'End':end, 'CloseWindow':True})
+                    if spec == {}:
+                        image_sections.append({'Index':word_count,'Start':start, 'End':end})
+                    else:
+                        image_sections.append(Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                     word_count += 1
             prev_frame = curr_frame
         except cv2.error as e:
