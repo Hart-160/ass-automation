@@ -117,8 +117,11 @@ class ASS_Automation:
         if video=='' or sce=='':
             QMessageBox.critical(self.ui, '发生错误', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
-            write_ass(sce, video, template)
-            QMessageBox.information(self.ui, '任务完成', '字幕已经生成！', QMessageBox.Ok, QMessageBox.Ok)
+            success = write_ass(sce, video, template)
+            if success:
+                QMessageBox.information(self.ui, '任务完成', '字幕已经生成！', QMessageBox.Ok, QMessageBox.Ok)
+            else:
+                QMessageBox.critical(self.ui, '发生错误', '请检查终端报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
 
 app = QApplication([])
 stats = Entrance()

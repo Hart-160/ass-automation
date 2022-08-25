@@ -1,3 +1,41 @@
+import os
+def split_res(name):
+    pos = name.find(']')
+    name = name[1:pos]
+    wid, hei = name.split('x')
+    return int(wid), int(hei)
+class AutoRead(object):
+    def auto_settings(param, width, height) -> str:
+        if param == '[Sample ASS Path]':
+            res = AutoRead.get_preferred_ass(width, height)
+            return res
+        if param == '[Default Reference Path]':
+            res = AutoRead.get_preferred_ref(width, height)
+            return res
+
+    def get_preferred_ref(width, height) -> str:
+        refs = []
+        li = os.listdir(os.getcwd())
+        for l in li:
+            if '[' in l and ']reference' in l:
+                refs.append(l)
+
+        for r in refs:
+            r_width, r_height = split_res(r)
+            if int(r_width) == width and int(r_height) == height:
+                return r
+
+    def get_preferred_ass(width, height):
+        refs = []
+        li = os.listdir(os.getcwd())
+        for l in li:
+            if '[' in l and ']untitled' in l:
+                refs.append(l)
+
+        for r in refs:
+            r_width, r_height = split_res(r)
+            if int(r_width) == width and int(r_height) == height:
+                return r
 class Settings(object):
     SAMPLE_ASS_PATH = '[Sample ASS Path]'
     DEFAULT_REFERENCE_PATH = '[Default Reference Path]'
@@ -5,23 +43,29 @@ class Settings(object):
     NORMAL_CLOSE_OFFSET = '[Normal Close Offset]'
     BLACK_FADEIN_OFFSET = '[Black Fade-in Offset]'
 
-    def settings_reader(parameter):
+    def settings_reader(parameter, width = None, height = None) ->str:
         with open('settings.txt', 'r', encoding='utf-8') as f:
             li = f.readlines()
 
         for i in range(len(li)):
             if parameter in li[i]:
                 res = li[i+1].replace('\n', '')
-                return res
+                if res == 'automatic':
+                    res = AutoRead.auto_settings(parameter, width, height)
+                    return res
+                else:
+                    return res
 
 class Reference(object):
     SCREEN_TEXT = '[SCREEN TEXT]'
     SCREEN_INITIAL = '[SCREEN INITIAL]'
+    SCREEN_VARIABLE = '[SCREEN VARIABLE]'
     TEXT_WORD_MX = '[TEXT WORD MX]'
     TEXT_BORDER_MX = '[TEXT BORDER MX]'
 
-    def reference_reader(parameter):
-        with open(Settings.settings_reader(Settings.DEFAULT_REFERENCE_PATH), 'r', encoding='utf-8') as f:
+    def reference_reader(parameter, width = None, height = None) ->str:
+        route = Settings.settings_reader(Settings.DEFAULT_REFERENCE_PATH, width, height)
+        with open(route, 'r', encoding='utf-8') as f:
             li = f.readlines()
 
         for i in range(len(li)):

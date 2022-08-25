@@ -84,19 +84,19 @@ def Merge(dict1, dict2):
     res = {**dict1, **dict2} 
     return res 
 
-def image_section_generator(vid):
+def image_section_generator(vid, width, height):
     '''
     输入视频路径，返回一个包含各节点的列表
     '''
-
+    cap = cv2.VideoCapture(vid)
     image_sections = []
     word_count = 1
 
     #border
-    x1,y1,x2,y2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_BORDER_MX))
+    x1,y1,x2,y2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_BORDER_MX, width, height))
 
     #dialogue
-    x_1,y_1,x_2,y_2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_WORD_MX))
+    x_1,y_1,x_2,y_2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_WORD_MX, width, height))
     
     cap = cv2.VideoCapture(vid)
     success, p_frame = cap.read()
@@ -125,10 +125,7 @@ def image_section_generator(vid):
                         process_count += 1
                         if process_count % 8 == 0:    
                             print('Process at: ' + stamp)
-                        if spec == {}:
-                            image_sections.append({'Index':word_count,'Start':start, 'End':end})
-                        else:
-                            image_sections.append(Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                        image_sections.append(Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                         start = ms
                         spec = {}
                         word_count += 1
@@ -145,10 +142,7 @@ def image_section_generator(vid):
                     process_count += 1
                     if process_count % 8 == 0:    
                         print('Process at: ' + stamp)
-                    if spec == {}:
-                        image_sections.append({'Index':word_count,'Start':start, 'End':end})
-                    else:
-                        image_sections.append(Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                    image_sections.append(Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                     word_count += 1
             prev_frame = curr_frame
         except cv2.error as e:

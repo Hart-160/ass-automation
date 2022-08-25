@@ -1,16 +1,16 @@
 import settings_handler as sh
 
-def shader_builder(length:int):
-    x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL))
+def shader_builder(length:int, width, height):
+    x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
     x3b = x2b
-    var = 48
+    var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
 
     x1 = x1b + int(var) * length
     x2 = x2b + int(var) * length
     x3 = x3b + int(var) * length
 
     effect = '{\\p1}'
-    shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT).format(x1, x2, x3)
+    shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT, width, height).format(x1, x2, x3)
 
     return effect + shelter_template
 
