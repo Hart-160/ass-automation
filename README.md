@@ -3,14 +3,15 @@
 灵感来源于PJSK-ass-automation
 非常感谢Jeunette大佬的帮助！
 
-python环境需求为3.8.7， 同时需要opencv等第三方库安装
+开发时python环境需求为3.8.7， 同时需要cv2(opencv)，PySide2等第三方库安装
 
 用ASS-automation生成翻译模板，文本链接我另外整理再放上来
 
 运行ASS-automation，可以按直觉运行
+**轴机部分的视频路径必须是英文！！**
 
 预设有对应三四种分辨率的，请根据自己设备的分辨率选择
-并在settings.txt更改相应的默认字幕&默认reference
+**运行前请在settings.txt更改相应的默认字幕&默认reference**
 
 抖动检测无法检测到所有的抖动，不过可以留意所有CloseWindow的遮罩
 如果和下一行遮罩时间间隔过短，也有可能是抖动出现
