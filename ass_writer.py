@@ -21,15 +21,15 @@ def shader_builder(length:int, width, height):
     return effect + shelter_template
 
 def write_ass(sce, video, template=None) -> bool:
-    print('Started...')
-
     cap = cv2.VideoCapture(video)
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = round(cap.get(cv2.CAP_PROP_FPS))
     cap.release()
 
     print('Frame Width: {}'.format(width))
     print('Frame Height: {}'.format(height))
+    print('FPS: {}'.format(fps))
 
     ref = sh.AutoRead.get_preferred_ref(width, height)
     if ref == None:
@@ -37,9 +37,13 @@ def write_ass(sce, video, template=None) -> bool:
         if sh.AutoRead.get_preferred_ref(height, width) != None:
             print('Please check if your source was rotated! Try to make it into the right position!')
         return False
+    elif fps < 60:
+        print('The program only supports 60hz sources. Please be sure your source supports that!')
+        return False
     else:
         print('SampleASS: ' + sh.AutoRead.get_preferred_ass(width, height))
         print('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
+        print('Started...')
         im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
         ev_sections = DialogueSections.sce_handler(sce)
         if template != None:
@@ -70,6 +74,7 @@ def write_ass(sce, video, template=None) -> bool:
             if 'CloseWindow' in im:
                 open_offset = 0
                 if 'OpenWindow' in im:
+                    naming = 'OpenClose'
                     open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
 
                 if 'Color' in ch and im['Index'] in colorfade_li:
@@ -116,10 +121,14 @@ def write_ass(sce, video, template=None) -> bool:
         route, name = os.path.split(video)
         shutil.copy(src, route)
         old_name = os.path.join(route, src)
-        new_name = video + '.ass'
-        os.rename(old_name, new_name)
+        try:
+            new_name = video + '.ass'
+            os.rename(old_name, new_name)
+        except FileExistsError:
+            new_name = video + ' - copy' + '.ass'
+            os.rename(old_name, new_name)
 
-        with open(new_name, 'a+', encoding='utf-8') as a: #file not exist error
+        with open(new_name, 'a+', encoding='utf-8') as a:
             for s in ass_shader:
                 a.write(s + '\n')
             for al in ass_alert:
@@ -129,7 +138,7 @@ def write_ass(sce, video, template=None) -> bool:
 
         print('Completed!')
         if len(im_sections) != len(dialogue_list):
-            print('There is {} line shifted. Please take a notice!'.format(abs(len(dialogue_list) - len(im_sections))))
+            print('There are {} line(s) shifted. Please take a notice!'.format(abs(len(dialogue_list) - len(im_sections))))
         return True
 
 if __name__ == '__main__':

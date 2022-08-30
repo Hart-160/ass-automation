@@ -90,6 +90,7 @@ class ImageSections:
         输入视频路径，返回一个包含各节点的列表
         '''
         cap = cv2.VideoCapture(vid)
+        total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         image_sections = []
         word_count = 1
 
@@ -114,7 +115,8 @@ class ImageSections:
             try:
                 success, c_frame = cap.read()
                 ms = cap.get(cv2.CAP_PROP_POS_MSEC)
-                stamp = ImageSections.get_tstamp(ms)
+                f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                perc = round(f / total_frame * 100, 2)
                 curr_frame = ImageData(c_frame)
                 curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
                 curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
@@ -124,8 +126,8 @@ class ImageSections:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             end = ms
                             process_count += 1
-                            if process_count % 8 == 0:    
-                                print('Process at: ' + stamp)
+                            #if process_count % 8 == 0:    
+                            print('Process Completed: {}%'.format(perc))
                             image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                             start = ms
                             spec = {}
@@ -135,14 +137,14 @@ class ImageSections:
                         start = ms
                         spec = {'OpenWindow':True}
                         process_count += 1
-                        if process_count % 8 == 0:    
-                            print('Process at: ' + stamp)
+                        #if process_count % 8 == 0:    
+                        print('Process Completed: {}%'.format(perc))
                     else:
                         end = ms
                         spec = ImageSections.Merge(spec, {'CloseWindow':True})
                         process_count += 1
-                        if process_count % 8 == 0:    
-                            print('Process at: ' + stamp)
+                        #if process_count % 8 == 0:    
+                        print('Process Completed: {}%'.format(perc))
                         image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                         word_count += 1
                 prev_frame = curr_frame

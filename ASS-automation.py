@@ -1,6 +1,6 @@
 from PySide2.QtWidgets import *
 from PySide2.QtUiTools import QUiLoader
-import generate_tmp as gt
+from generate_tmp import *
 import os
 from ass_writer import write_ass
 class Entrance:
@@ -29,6 +29,7 @@ class Generate_TMP:
         self.ui.choose_sce.clicked.connect(self.select_sce)
         self.ui.generate.clicked.connect(self.generate)
         self.ui.generate_text.clicked.connect(self.generateText)
+        self.ui.back_main.clicked.connect(self.back)
 
     def select_sce(self):
         scePath, _  = QFileDialog.getOpenFileName(
@@ -44,7 +45,7 @@ class Generate_TMP:
         if sce == '':
             QMessageBox.critical(self.ui, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
-            gt.sce_to_template(sce)
+            TemplateUtils.sce_to_template(sce)
             rout, name = os.path.split(sce)
             sole_name= os.path.splitext(name)[0]
             new_name = '\\[TEMPLATE] ' + sole_name + '.txt'
@@ -56,13 +57,17 @@ class Generate_TMP:
         if sce == '':
             QMessageBox.critical(self.ui, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
-            gt.clean_sce(sce)
+            TemplateUtils.clean_sce(sce)
             rout, name = os.path.split(sce)
             sole_name= os.path.splitext(name)[0]
             new_name = '\\[TEXT] ' + sole_name + '.txt'
             os.rename(rout + '\\' + sole_name + '.txt', rout + new_name)
             QMessageBox.information(self.ui, '任务完成', '文本已成功提取！', QMessageBox.Ok, QMessageBox.Ok)
 
+    def back(self):
+        self.subwin = Entrance()
+        self.subwin.ui.show()
+        self.ui.close()
 class ASS_Automation:
 
     def __init__(self):
@@ -72,6 +77,7 @@ class ASS_Automation:
         self.ui.choose_video.clicked.connect(self.select_video)
         self.ui.choose_sce.clicked.connect(self.select_sce)
         self.ui.choose_template.clicked.connect(self.select_template)
+        self.ui.back_main.clicked.connect(self.back)
 
         self.ui.video_route.setPlaceholderText('视频文件为必填项，请确保与其余两项对应')
         self.ui.sce_route.setPlaceholderText('SCE文件为必填项，请确保与其余两项对应')
@@ -106,6 +112,11 @@ class ASS_Automation:
             "文件类型 (*.txt)"
         )
         self.ui.template_route.setText(tempPath)
+
+    def back(self):
+        self.subwin = Entrance()
+        self.subwin.ui.show()
+        self.ui.close()
 
     def run(self):
         video = self.ui.video_route.text()

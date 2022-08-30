@@ -29,9 +29,9 @@
    <widget class="QPushButton" name="generate">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>400</x>
       <y>50</y>
-      <width>111</width>
+      <width>121</width>
       <height>41</height>
      </rect>
     </property>
@@ -82,9 +82,9 @@
    <widget class="QPushButton" name="generate_text">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>270</x>
       <y>50</y>
-      <width>111</width>
+      <width>121</width>
       <height>41</height>
      </rect>
     </property>
@@ -96,6 +96,25 @@
     </property>
     <property name="text">
      <string>文本提取</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="back_main">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>50</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>返回上级</string>
     </property>
    </widget>
   </widget>
