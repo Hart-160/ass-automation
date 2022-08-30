@@ -48,7 +48,7 @@
      </font>
     </property>
     <property name="text">
-     <string>选择模板文件</string>
+     <string>选择翻译模板</string>
     </property>
    </widget>
    <widget class="QPushButton" name="choose_video">

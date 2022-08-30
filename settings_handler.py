@@ -1,9 +1,5 @@
 import os
-def split_res(name):
-    pos = name.find(']')
-    name = name[1:pos]
-    wid, hei = name.split('x')
-    return int(wid), int(hei)
+
 class AutoRead(object):
     def auto_settings(param, width, height) -> str:
         if param == '[Sample ASS Path]':
@@ -13,6 +9,12 @@ class AutoRead(object):
             res = AutoRead.get_preferred_ref(width, height)
             return res
 
+    def split_res(name):
+        pos = name.find(']')
+        name = name[1:pos]
+        wid, hei = name.split('x')
+        return int(wid), int(hei)
+
     def get_preferred_ref(width, height) -> str:
         refs = []
         li = os.listdir(os.getcwd())
@@ -21,7 +23,7 @@ class AutoRead(object):
                 refs.append(l)
 
         for r in refs:
-            r_width, r_height = split_res(r)
+            r_width, r_height = AutoRead.split_res(r)
             if int(r_width) == width and int(r_height) == height:
                 return r
 
@@ -33,7 +35,7 @@ class AutoRead(object):
                 refs.append(l)
 
         for r in refs:
-            r_width, r_height = split_res(r)
+            r_width, r_height = AutoRead.split_res(r)
             if int(r_width) == width and int(r_height) == height:
                 return r
 class Settings(object):

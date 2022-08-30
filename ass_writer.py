@@ -1,10 +1,24 @@
-from dialogue_sections import sce_handler, tl_substitude
-from image_sections import image_section_generator, get_tstamp, jitter_cleaner
+from dialogue_sections import DialogueSections
+from image_sections import ImageSections
 import ass_utils as au
 import settings_handler as sh
 import os
 import cv2
 import shutil
+
+def shader_builder(length:int, width, height):
+    x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
+    x3b = x2b
+    var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
+
+    x1 = x1b + int(var) * length
+    x2 = x2b + int(var) * length
+    x3 = x3b + int(var) * length
+
+    effect = '{\\p1}'
+    shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT, width, height).format(x1, x2, x3)
+
+    return effect + shelter_template
 
 def write_ass(sce, video, template=None) -> bool:
     print('Started...')
@@ -14,17 +28,22 @@ def write_ass(sce, video, template=None) -> bool:
     height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     cap.release()
 
+    print('Frame Width: {}'.format(width))
+    print('Frame Height: {}'.format(height))
+
     ref = sh.AutoRead.get_preferred_ref(width, height)
     if ref == None:
         print('No Reference Found! Please check your source or make presets for your resolution')
+        if sh.AutoRead.get_preferred_ref(height, width) != None:
+            print('Please check if your source was rotated! Try to make it into the right position!')
         return False
     else:
         print('SampleASS: ' + sh.AutoRead.get_preferred_ass(width, height))
         print('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
-        im_sections, alert_li = jitter_cleaner(image_section_generator(video, width, height))
-        ev_sections = sce_handler(sce)
+        im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
+        ev_sections = DialogueSections.sce_handler(sce)
         if template != None:
-            ev_sections = tl_substitude(template, sce_handler(sce))
+            ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
 
         dialogue_list = []
         title_list = []
@@ -49,25 +68,31 @@ def write_ass(sce, video, template=None) -> bool:
 
         for di, im in zip(dialogue_list, im_sections):
             if 'CloseWindow' in im:
+                open_offset = 0
+                if 'OpenWindow' in im:
+                    open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
+
                 if 'Color' in ch and im['Index'] in colorfade_li:
                     naming = 'BlackFade'
                     extra_fad = '{\\fad(0,600)}'
                     text_fad = '{\\fad(0,500)}'
-                    offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
+                    fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
                 else:
                     naming = 'NormalClose'
                     extra_fad = '{\\fad(0,100)}'
                     text_fad = '{\\fad(0,100)}'
-                    offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
-                line = au.Dialogue(get_tstamp(im['Start']), get_tstamp(im['End'] + offset), di['Talker'], text = text_fad + di['Body'])
-                shader = au.Shader(get_tstamp(im['Start']), get_tstamp(im['End'] + offset), name=naming, text=au.shader_builder(len(di['Talker']), width, height) + extra_fad)
+                    fade_offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
+                line = au.Dialogue(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
+                shader = au.Shader(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End'] + fade_offset), name=naming, text=shader_builder(len(di['Talker']), width, height) + extra_fad)
             else:
+                open_offset = 0
+                naming = None
                 if 'OpenWindow' in im:
-                    offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
-                else:
-                    offset = 0
-                line = au.Dialogue(get_tstamp(im['Start'] + offset), get_tstamp(im['End']), di['Talker'], di['Body'])
-                shader = au.Shader(get_tstamp(im['Start'] + offset), get_tstamp(im['End']), text=au.shader_builder(len(di['Talker']), width, height))
+                    open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
+                    naming = 'OpenWindow'
+                    
+                line = au.Dialogue(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End']), di['Talker'], di['Body'])
+                shader = au.Shader(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End']), name=naming, text=shader_builder(len(di['Talker']), width, height))
             shader = shader.build_comment()
             ass_shader.append(shader)
             line = line.build_dialogue()
@@ -75,7 +100,7 @@ def write_ass(sce, video, template=None) -> bool:
 
         for ti in title_list:
             tit_count = int(0)
-            title = au.Title(get_tstamp(0), get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
+            title = au.Title(ImageSections.get_tstamp(0), ImageSections.get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
             title = title.build_dialogue()
             modify_index = int(tit_count) - 1
             ind = int(ti['Index']) + modify_index
@@ -83,7 +108,7 @@ def write_ass(sce, video, template=None) -> bool:
             tit_count += int(1)
 
         for a in alert_li:
-            alert = au.Caution(get_tstamp(a['Start']), get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
+            alert = au.Caution(ImageSections.get_tstamp(a['Start']), ImageSections.get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
             alert = alert.build_comment()
             ass_alert.append(alert)
         
@@ -94,7 +119,7 @@ def write_ass(sce, video, template=None) -> bool:
         new_name = video + '.ass'
         os.rename(old_name, new_name)
 
-        with open(new_name, 'a+', encoding='utf-8') as a:
+        with open(new_name, 'a+', encoding='utf-8') as a: #file not exist error
             for s in ass_shader:
                 a.write(s + '\n')
             for al in ass_alert:
