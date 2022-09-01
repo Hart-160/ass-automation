@@ -1,5 +1,98 @@
-import dialogue_classify as ct
 import generate_tmp as gt
+
+class Event(object):
+
+    #event_type = 'Event'
+
+    def __init__(self, index) -> None:
+        self.index = index
+        self.event_type = 'Event'
+
+    def get_dict(self):
+        return {'Index':self.index, 'EventType':self.event_type}
+
+class Dialogue(Event):
+    def __init__(self, index, talker, body) -> None:
+        super().__init__(index)
+        self.event_type = 'Dialogue'
+        self.talker = talker
+        self.body = body
+
+    def build_body(self):
+        str = '\\N'
+        return str.join(self.body)
+
+    def get_dict(self):
+        return {'Index':self.index, 'EventType':self.event_type, 'Talker':self.talker, 'Body':self.body}
+
+class CloseWindow(Event):
+    def __init__(self, index, color = None, fade = None) -> None:
+        super().__init__(index)
+        self.event_type = 'CloseWindow'
+        self.color = color
+        self.fade = fade
+    
+    def get_dict(self):
+        if self.color == None:
+            return super().get_dict()
+        else:
+            if self.fade == None:
+                return {'Index':self.index, 'EventType':self.event_type, 'Color':self.color}
+            else:
+                self.fade = float(self.fade)
+                return {'Index':self.index, 'EventType':self.event_type, 'Color':self.color, 'Fade':self.fade}
+
+class OpenWindow(Event):
+    def __init__(self, index) -> None:
+        super().__init__(index)
+        self.event_type = 'OpenWindow'
+
+    def get_dict(self):
+        return super().get_dict()
+
+class Title(Event):
+    def __init__(self, index, body) -> None:
+        super().__init__(index)
+        self.event_type = 'Title'
+        self.body = body
+
+    def get_dict(self):
+        return {'Index':self.index, 'EventType':self.event_type, 'Body':self.body}
+
+class Subtitle(Event):
+    def __init__(self, index, body) -> None:
+        super().__init__(index)
+        self.event_type = 'Subtitle'
+        self.body = body
+
+    def get_dict(self):
+        return {'Index':self.index, 'EventType':self.event_type, 'Body':self.body}
+
+class FontSizeChange(Event):
+    def __init__(self, index, font_size) -> None:
+        super().__init__(index)
+        self.event_type = 'FontSizeChange'
+        if font_size == '48':
+            self.font_size = 'Default'
+        else:
+            font_size = int(font_size)
+            self.font_size = font_size
+
+    def get_dict(self):
+        return {'Index':self.index, 'EventType':self.event_type, 'FontSize':self.font_size}
+
+class Jitter(Event):
+    def __init__(self, index, time = None) -> None:
+        super().__init__(index)
+        self.event_type = 'Jitter'
+        self.time = time
+
+    def get_dict(self):
+        if self.time == None:
+            return super().get_dict()
+        else:
+            self.time = float(self.time)
+            return {'Index':self.index, 'EventType':self.event_type, 'Time':self.time}
 
 class DialogueSections:
     def clean_text(text:str) -> str:
@@ -34,16 +127,16 @@ class DialogueSections:
                 temp = line.replace(gt.SCEwords.end, '')
                 body = temp[slic + 1:]
                 if gt.SCEwords.title in line:
-                    tit = ct.Title(index, body)
+                    tit = Title(index, body)
                 else:
-                    tit = ct.Subtitle(index, body)
+                    tit = Subtitle(index, body)
                 event_list.append(tit.get_dict())
 
             elif gt.SCEwords.close_window in line:
                 # 判断对话框消失
                 if gt.SCEwords.fade_in in lis[i-1]:
                     # 带有颜色变化的对话框消失
-                    cw = ct.CloseWindow(index - 1, 'CloseWindow')
+                    cw = CloseWindow(index - 1, 'CloseWindow')
                     temp = lis[i-1].replace(gt.SCEwords.fade_in, '')
                     color = temp[0]
                     cw.color = color
@@ -55,21 +148,21 @@ class DialogueSections:
                         cw.fade = fade
                 else:
                     # 普通的对话框消失
-                    cw = ct.CloseWindow(index - 1)
+                    cw = CloseWindow(index - 1)
                 if event_list[-1]['EventType'] == 'CloseWindow':
                     continue
                 event_list.append(cw.get_dict())
 
             elif gt.SCEwords.open_window in line:
                 # 判断对话框弹出
-                ow = ct.OpenWindow(index)
+                ow = OpenWindow(index)
                 event_list.append(ow.get_dict())
 
             elif gt.SCEwords.jitter_sign in line:
                 # 判断对话框抖动
                 if line.startswith(gt.SCEwords.jitter_sign):
                     if gt.SCEwords.speaker in lis[i+1]:
-                        jit = ct.Jitter(index)
+                        jit = Jitter(index)
                         if gt.SCEwords.time_identifier in line:
                             temp1 = line.find(gt.SCEwords.time_identifier)
                             temp2 = line.find(gt.SCEwords.end_backup, temp1)
@@ -80,7 +173,7 @@ class DialogueSections:
                             jit.time = float(time)
                         event_list.append(jit.get_dict())
                     else:
-                        jit = ct.Jitter(index - 1)
+                        jit = Jitter(index - 1)
                         if gt.SCEwords.time_identifier in line:
                             temp1 = line.find(gt.SCEwords.time_identifier)
                             temp2 = line.find(gt.SCEwords.end_backup, temp1)
@@ -91,7 +184,7 @@ class DialogueSections:
                             jit.time = float(time)
                         event_list.append(jit.get_dict())
                 else:
-                    jit = ct.Jitter(index - 1)
+                    jit = Jitter(index - 1)
                     if gt.SCEwords.time_identifier in line:
                         temp1 = line.find(gt.SCEwords.time_identifier)
                         temp2 = line.find(gt.SCEwords.end_backup, temp1)
@@ -138,7 +231,7 @@ class DialogueSections:
                         continue
                 if body == []:
                     continue
-                dialogue = ct.Dialogue(index, talker, body)
+                dialogue = Dialogue(index, talker, body)
                 dialogue.body = dialogue.build_body()
                 event_list.append(dialogue.get_dict())
                 index += 1
@@ -178,7 +271,7 @@ class DialogueSections:
                         continue
                 if body == []:
                     continue
-                dialogue = ct.Dialogue(index, talker, body)
+                dialogue = Dialogue(index, talker, body)
                 dialogue.body = dialogue.build_body()
                 event_list.append(dialogue.get_dict())
                 index += 1

@@ -11,4 +11,4 @@ automatic
 60
 
 [Black Fade-in Offset] ms
-400
+350

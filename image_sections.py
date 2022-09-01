@@ -1,7 +1,6 @@
 import numpy as np
 import cv2
 import settings_handler as sh
-
 class ImageData(object):
     '''
     对一帧进行对话框和文字判定
@@ -12,8 +11,8 @@ class ImageData(object):
     def is_dialogue(self,x1,x2,y1,y2) -> bool:
         #判断对话框
         self.dialogue = bool(False)
-        lower = np.array([159, 70, 180])
-        upper = np.array([168, 245, 245])
+        lower = np.array([160, 70, 180])
+        upper = np.array([168, 245, 225])
 
         im = self.image
         fhsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
@@ -100,7 +99,6 @@ class ImageSections:
         #dialogue
         x_1,y_1,x_2,y_2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_WORD_MX, width, height))
         
-        cap = cv2.VideoCapture(vid)
         success, p_frame = cap.read()
         prev_frame = ImageData(p_frame)
         prev_frame.dialogue = prev_frame.is_dialogue(x1, x2, y1, y2)
@@ -126,8 +124,8 @@ class ImageSections:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             end = ms
                             process_count += 1
-                            #if process_count % 8 == 0:    
-                            print('Process Completed: {}%'.format(perc))
+                            if process_count % 10 == 0:    
+                                print('Process Completed: {}%'.format(perc))
                             image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                             start = ms
                             spec = {}
@@ -137,14 +135,14 @@ class ImageSections:
                         start = ms
                         spec = {'OpenWindow':True}
                         process_count += 1
-                        #if process_count % 8 == 0:    
-                        print('Process Completed: {}%'.format(perc))
+                        if process_count % 10 == 0:    
+                            print('Process Completed: {}%'.format(perc))
                     else:
                         end = ms
                         spec = ImageSections.Merge(spec, {'CloseWindow':True})
                         process_count += 1
-                        #if process_count % 8 == 0:    
-                        print('Process Completed: {}%'.format(perc))
+                        if process_count % 10 == 0:    
+                            print('Process Completed: {}%'.format(perc))
                         image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                         word_count += 1
                 prev_frame = curr_frame

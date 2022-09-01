@@ -1,10 +1,64 @@
 from dialogue_sections import DialogueSections
 from image_sections import ImageSections
-import ass_utils as au
 import settings_handler as sh
 import os
 import cv2
 import shutil
+
+class ASS_Line(object):
+    def __init__(self, start:str, end:str, name:str = None, text:str = None) -> None:
+        self.layer = 0
+        self.start = start
+        self.end = end
+        self.style = ''
+        self.name = name
+        self.margin_set = '0,0,0'
+        self.effect = None
+        self.text = text
+
+    def build_dialogue(self):
+        li = []
+        s = ','
+        for name, value in vars(self).items():
+            if value == None:
+                value = ''
+            li.append(str(value))
+        
+        return 'Dialogue: ' + s.join(li)
+
+    def build_comment(self):
+        li = []
+        s = ','
+        for name, value in vars(self).items():
+            if value == None:
+                value = ''
+            li.append(str(value))
+        
+        return 'Comment: ' + s.join(li)
+
+class Dialogue(ASS_Line):
+    def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
+        super().__init__(start, end, name, text)
+        self.layer = 1
+        self.style = 'D4DJ 剧情'
+
+class Title(ASS_Line):
+    def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
+        super().__init__(start, end, name, text)
+        self.layer = 0
+        self.style = 'D4DJ TITLE'
+
+class Shader(ASS_Line):
+    def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
+        super().__init__(start, end, name, text)
+        self.layer = 0
+        self.style = 'D4DJ shader'
+
+class Caution(ASS_Line):
+    def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
+        super().__init__(start, end, name, text)
+        self.layer = 1
+        self.style = 'CAUTION'
 
 def shader_builder(length:int, width, height):
     x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
@@ -44,10 +98,10 @@ def write_ass(sce, video, template=None) -> bool:
         print('SampleASS: ' + sh.AutoRead.get_preferred_ass(width, height))
         print('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
         print('Started...')
-        im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
         ev_sections = DialogueSections.sce_handler(sce)
         if template != None:
             ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
+        im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
 
         dialogue_list = []
         title_list = []
@@ -87,8 +141,8 @@ def write_ass(sce, video, template=None) -> bool:
                     extra_fad = '{\\fad(0,100)}'
                     text_fad = '{\\fad(0,100)}'
                     fade_offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
-                line = au.Dialogue(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
-                shader = au.Shader(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End'] + fade_offset), name=naming, text=shader_builder(len(di['Talker']), width, height) + extra_fad)
+                line = Dialogue(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
+                shader = Shader(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End'] + fade_offset), name=naming, text=shader_builder(len(di['Talker']), width, height) + extra_fad)
             else:
                 open_offset = 0
                 naming = None
@@ -96,24 +150,24 @@ def write_ass(sce, video, template=None) -> bool:
                     open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
                     naming = 'OpenWindow'
                     
-                line = au.Dialogue(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End']), di['Talker'], di['Body'])
-                shader = au.Shader(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End']), name=naming, text=shader_builder(len(di['Talker']), width, height))
+                line = Dialogue(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End']), di['Talker'], di['Body'])
+                shader = Shader(ImageSections.get_tstamp(im['Start'] + open_offset), ImageSections.get_tstamp(im['End']), name=naming, text=shader_builder(len(di['Talker']), width, height))
             shader = shader.build_comment()
             ass_shader.append(shader)
             line = line.build_dialogue()
             ass_dialogue.append(line)
 
+        tit_count = 0
         for ti in title_list:
-            tit_count = int(0)
-            title = au.Title(ImageSections.get_tstamp(0), ImageSections.get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
+            title = Title(ImageSections.get_tstamp(0), ImageSections.get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
             title = title.build_dialogue()
-            modify_index = int(tit_count) - 1
-            ind = int(ti['Index']) + modify_index
-            ass_dialogue.insert(int(ind), title)
-            tit_count += int(1)
+            modify_index = tit_count - 1
+            ind = ti['Index'] + modify_index
+            ass_dialogue.insert(ind, title)
+            tit_count += 1
 
         for a in alert_li:
-            alert = au.Caution(ImageSections.get_tstamp(a['Start']), ImageSections.get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
+            alert = Caution(ImageSections.get_tstamp(a['Start']), ImageSections.get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
             alert = alert.build_comment()
             ass_alert.append(alert)
         

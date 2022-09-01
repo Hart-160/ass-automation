@@ -134,7 +134,8 @@ class ASS_Automation:
             else:
                 QMessageBox.critical(self.ui, '发生错误', '请检查终端报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
 
-app = QApplication([])
-stats = Entrance()
-stats.ui.show()
-app.exec_()
+if __name__ == '__main__':
+    app = QApplication([])
+    stats = Entrance()
+    stats.ui.show()
+    app.exec_()
