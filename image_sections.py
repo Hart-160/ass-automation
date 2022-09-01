@@ -1,6 +1,11 @@
 import numpy as np
 import cv2
 import settings_handler as sh
+
+'''
+这个部分负责分析视频
+'''
+
 class ImageData(object):
     '''
     对一帧进行对话框和文字判定
@@ -124,8 +129,8 @@ class ImageSections:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             end = ms
                             process_count += 1
-                            if process_count % 10 == 0:    
-                                print('Process Completed: {}%'.format(perc))
+                            if process_count % 5 == 0:    
+                                print('任务进度：{}%'.format(perc))
                             image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                             start = ms
                             spec = {}
@@ -135,14 +140,14 @@ class ImageSections:
                         start = ms
                         spec = {'OpenWindow':True}
                         process_count += 1
-                        if process_count % 10 == 0:    
-                            print('Process Completed: {}%'.format(perc))
+                        if process_count % 5 == 0:    
+                            print('任务进度：{}%'.format(perc))
                     else:
                         end = ms
                         spec = ImageSections.Merge(spec, {'CloseWindow':True})
                         process_count += 1
-                        if process_count % 10 == 0:    
-                            print('Process Completed: {}%'.format(perc))
+                        if process_count % 5 == 0:    
+                            print('任务进度：{}%'.format(perc))
                         image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                         word_count += 1
                 prev_frame = curr_frame

@@ -3,6 +3,11 @@ from PySide2.QtUiTools import QUiLoader
 from generate_tmp import *
 import os
 from ass_writer import write_ass
+
+'''
+这个部分负责GUI，是实质上的主程序
+'''
+
 class Entrance:
 
     def __init__(self):
@@ -79,7 +84,7 @@ class ASS_Automation:
         self.ui.choose_template.clicked.connect(self.select_template)
         self.ui.back_main.clicked.connect(self.back)
 
-        self.ui.video_route.setPlaceholderText('视频文件为必填项，请确保与其余两项对应')
+        self.ui.video_route.setPlaceholderText('视频文件为必填项，且路径不能包含中文')
         self.ui.sce_route.setPlaceholderText('SCE文件为必填项，请确保与其余两项对应')
         self.ui.template_route.setPlaceholderText('模板为可选项，请确保与其余两项对应')
 

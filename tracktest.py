@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 
 #vid = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\tbk\\test.mp4'
-pic = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\test.png'
+pic = 'test.png'
 
 img = cv2.imread(pic)
 cv2.namedWindow('Track')
@@ -37,7 +37,7 @@ def get_mask():
 #success, frame = cap.read()
 success = True
 while success:
-    frame = cv2.resize(img, (0,0),fx=0.6, fy=0.6)
+    frame = cv2.resize(img, (0,0),fx=0.3, fy=0.3)
     fhsv = cv2.cvtColor(frame, cv2.COLOR_RGB2HSV)
     lower, upper = get_mask()
     mask = cv2.inRange(fhsv, lower, upper)

@@ -1,5 +1,9 @@
 import os
 
+'''
+这个部分负责文本提取和模板生成
+'''
+
 class SCEwords:
     title = '［タイトル：'
     sub_title = '［サブタイトル：'
@@ -28,6 +32,10 @@ class TemplateUtils:
         return res
 
     def txt_to_template(route):
+        '''
+        输入文本路径（来自文本清理）
+        基于提取的文本生成模板
+        '''
 
         with open(route, 'r+', encoding='utf-8') as original:
             li = original.readlines()
@@ -54,6 +62,10 @@ class TemplateUtils:
                         continue
                     
     def clean_sce(pth) -> str:
+        '''
+        输入sce路径，提取文本生成txt
+        输出的str是文本路径，给模板生成用的
+        '''
         temp_filepath, filename = os.path.split(pth)
         file_sole_name = os.path.splitext(filename)[0]
         txt_name = file_sole_name + '.txt'
@@ -174,6 +186,9 @@ class TemplateUtils:
         return new_filepath
     
     def sce_to_template(pth):
+        '''
+        输入sce路径，直接生成模板
+        '''
         filepath = TemplateUtils.clean_sce(pth)
         TemplateUtils.txt_to_template(filepath)
 

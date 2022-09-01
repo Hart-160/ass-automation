@@ -5,6 +5,10 @@ import os
 import cv2
 import shutil
 
+'''
+这个部分负责以视频分析列表和sce分析列表为基础写入字幕文件
+'''
+
 class ASS_Line(object):
     def __init__(self, start:str, end:str, name:str = None, text:str = None) -> None:
         self.layer = 0
@@ -81,23 +85,25 @@ def write_ass(sce, video, template=None) -> bool:
     fps = round(cap.get(cv2.CAP_PROP_FPS))
     cap.release()
 
-    print('Frame Width: {}'.format(width))
-    print('Frame Height: {}'.format(height))
+    if width == 0 or height == 0:
+        print('请确保视频路径不包含中文字符！')
+        return False
+    print('视频帧宽度：{}'.format(width))
+    print('视频帧高度：{}'.format(height))
     print('FPS: {}'.format(fps))
 
     ref = sh.AutoRead.get_preferred_ref(width, height)
     if ref == None:
-        print('No Reference Found! Please check your source or make presets for your resolution')
+        print('未找到Reference文件！请检查是否存在与视频分辨率相符的Reference！')
         if sh.AutoRead.get_preferred_ref(height, width) != None:
-            print('Please check if your source was rotated! Try to make it into the right position!')
+            print('视频文件可能存在翻转，请将其调整为正确的方向！')
         return False
     elif fps < 60:
-        print('The program only supports 60hz sources. Please be sure your source supports that!')
+        print('本程序只支持60hz视频，请确保视频帧率符合要求！')
         return False
     else:
-        print('SampleASS: ' + sh.AutoRead.get_preferred_ass(width, height))
         print('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
-        print('Started...')
+        print('任务开始…')
         ev_sections = DialogueSections.sce_handler(sce)
         if template != None:
             ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
@@ -190,9 +196,9 @@ def write_ass(sce, video, template=None) -> bool:
             for dial in ass_dialogue:
                 a.write(dial + '\n')
 
-        print('Completed!')
+        print('任务完成！')
         if len(im_sections) != len(dialogue_list):
-            print('There are {} line(s) shifted. Please take a notice!'.format(abs(len(dialogue_list) - len(im_sections))))
+            print('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
         return True
 
 if __name__ == '__main__':

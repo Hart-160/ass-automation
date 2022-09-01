@@ -1,5 +1,9 @@
 import os
 
+'''
+这个部分负责读取设置文件供视频分析及字幕写入使用
+'''
+
 class AutoRead(object):
     def auto_settings(param, width, height) -> str:
         if param == '[Sample ASS Path]':

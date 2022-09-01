@@ -1,5 +1,9 @@
 import generate_tmp as gt
 
+'''
+这个部分负责从sce提取出可供视频分析校验的列表
+'''
+
 class Event(object):
 
     #event_type = 'Event'
