@@ -13,7 +13,7 @@ class AutoRead(object):
             res = AutoRead.get_preferred_ref(width, height)
             return res
 
-    def split_res(name):
+    def __split_res(name):
         pos = name.find(']')
         name = name[1:pos]
         wid, hei = name.split('x')
@@ -27,7 +27,7 @@ class AutoRead(object):
                 refs.append(l)
 
         for r in refs:
-            r_width, r_height = AutoRead.split_res(r)
+            r_width, r_height = AutoRead.__split_res(r)
             if int(r_width) == width and int(r_height) == height:
                 return r
 
@@ -39,7 +39,7 @@ class AutoRead(object):
                 refs.append(l)
 
         for r in refs:
-            r_width, r_height = AutoRead.split_res(r)
+            r_width, r_height = AutoRead.__split_res(r)
             if int(r_width) == width and int(r_height) == height:
                 return r
 class Settings(object):

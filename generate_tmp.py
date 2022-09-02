@@ -26,7 +26,7 @@ class SCEwords:
     end_backup = '］' # 涉及索引切片操作的时候用这个
 
 class TemplateUtils:
-    def clean_text(text) -> str:
+    def __clean_text(text) -> str:
         li = text.split('＠')
         res = li[0] + '\n'
         return res
@@ -82,7 +82,7 @@ class TemplateUtils:
             ori = sce.readlines()
             for o in ori:
                 if '＠' in o:
-                    s = TemplateUtils.clean_text(o)
+                    s = TemplateUtils.__clean_text(o)
                     origin.append(s)
                 elif '{' in o or '}' in o:
                     continue
@@ -127,7 +127,7 @@ class TemplateUtils:
                             continue
                         elif not lin.startswith(SCEwords.start):
                             if '＠' in lin:
-                                temp = TemplateUtils.clean_text(lin)
+                                temp = TemplateUtils.__clean_text(lin)
                                 body.append(temp)
                             elif lin.startswith('\t'):
                                 continue
@@ -159,7 +159,7 @@ class TemplateUtils:
                         lin = origin[i+j]
                         if not lin.startswith(SCEwords.start):
                             if '＠' in lin:
-                                temp = TemplateUtils.clean_text(lin)
+                                temp = TemplateUtils.__clean_text(lin)
                                 body.append(temp)
                             elif lin.startswith('\t'):
                                 continue

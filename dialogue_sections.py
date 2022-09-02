@@ -99,7 +99,7 @@ class Jitter(Event):
             return {'Index':self.index, 'EventType':self.event_type, 'Time':self.time}
 
 class DialogueSections:
-    def clean_text(text:str) -> str:
+    def __clean_text(text:str) -> str:
         li = text.split('＠')
         res = li[0]
         return res
@@ -219,7 +219,7 @@ class DialogueSections:
                         continue
                     elif not lin.startswith(gt.SCEwords.start):
                         if '＠' in lin:
-                            temp = DialogueSections.clean_text(lin)
+                            temp = DialogueSections.__clean_text(lin)
                             body.append(temp)
                         elif lin.startswith('\t'):
                             continue
@@ -257,7 +257,7 @@ class DialogueSections:
                     lin = lin.replace('\u3000', '')
                     if not lin.startswith(gt.SCEwords.start):
                         if '＠' in lin:
-                            temp = DialogueSections.clean_text(lin)
+                            temp = DialogueSections.__clean_text(lin)
                             body.append(temp)
                         elif lin.startswith('\t'):
                             continue

@@ -13,61 +13,7 @@ class ImageData(object):
     def __init__(self, image) -> None:
         self.image = image
 
-    def is_dialogue(self,x1,x2,y1,y2) -> bool:
-        #判断对话框
-        self.dialogue = bool(False)
-        lower = np.array([160, 70, 180])
-        upper = np.array([168, 245, 225])
-
-        im = self.image
-        fhsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
-        mask = cv2.inRange(fhsv, lower, upper)
-        im = cv2.bitwise_and(im, im, mask=mask)
-        im = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
-        ret, im = cv2.threshold(im, 80, 255, cv2.THRESH_BINARY)
-        read_result = ImageSections.read_pixel(im, x1, x2, y1, y2)
-        if read_result:
-            self.dialogue = bool(True)
-        return self.dialogue
-
-    def is_word(self,x1,x2,y1,y2) -> bool:
-        #判断文字
-        self.word = bool(False)
-        img = self.image[y1:y2, x1:x2]
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-        ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
-        self.word_nz = np.count_nonzero(img)
-        if self.word_nz >= 50:
-            self.word = bool(True)
-        return self.word
-
-class ImageSections:
-    def get_tstamp(milliseconds) -> str:
-        '''
-        将视频进行时的毫秒数转化为aegisub中的时间戳
-        '''
-        seconds = milliseconds//1000
-        milliseconds = milliseconds%1000
-
-        minutes = 0
-        hours = 0
-        if seconds >= 60:
-            minutes = seconds//60
-            seconds = seconds % 60
-
-        if minutes >= 60:
-            hours = minutes//60
-            minutes = minutes % 60
-
-        hr = str(hours)
-        m = str(int(minutes)).zfill(2)
-        s = str(int(seconds)).zfill(2)
-        ms = str(int(milliseconds))[:-1].zfill(2)
-
-        tstamp = '{}:{}:{}.{}'.format(hr, m, s, ms)
-        return tstamp
-
-    def read_pixel(frame, x1, x2, y1, y2):
+    def __read_pixel(frame, x1, x2, y1, y2):
         '''
         判断四个点是否为白色，如果四个都是，返回true，否则返回false
         '''
@@ -84,8 +30,38 @@ class ImageSections:
         if yes == 4:
             is_dialogue = True
         return is_dialogue
+    
+    def is_dialogue(self,x1,x2,y1,y2) -> bool:
+        #判断对话框
+        self.dialogue = bool(False)
+        lower = np.array([160, 70, 180])
+        upper = np.array([168, 245, 225])
 
-    def Merge(dict1, dict2): 
+        im = self.image
+        fhsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+        mask = cv2.inRange(fhsv, lower, upper)
+        im = cv2.bitwise_and(im, im, mask=mask)
+        im = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+        ret, im = cv2.threshold(im, 80, 255, cv2.THRESH_BINARY)
+        read_result = ImageData.__read_pixel(im, x1, x2, y1, y2)
+        if read_result:
+            self.dialogue = bool(True)
+        return self.dialogue
+
+    def is_word(self,x1,x2,y1,y2) -> bool:
+        #判断文字
+        self.word = bool(False)
+        img = self.image[y1:y2, x1:x2]
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
+        self.word_nz = np.count_nonzero(img)
+        if self.word_nz >= 50:
+            self.word = bool(True)
+        return self.word
+
+class ImageSections:
+
+    def __Merge(dict1, dict2): 
         res = {**dict1, **dict2} 
         return res 
 
@@ -131,7 +107,7 @@ class ImageSections:
                             process_count += 1
                             if process_count % 5 == 0:    
                                 print('任务进度：{}%'.format(perc))
-                            image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                             start = ms
                             spec = {}
                             word_count += 1
@@ -144,11 +120,11 @@ class ImageSections:
                             print('任务进度：{}%'.format(perc))
                     else:
                         end = ms
-                        spec = ImageSections.Merge(spec, {'CloseWindow':True})
+                        spec = ImageSections.__Merge(spec, {'CloseWindow':True})
                         process_count += 1
                         if process_count % 5 == 0:    
                             print('任务进度：{}%'.format(perc))
-                        image_sections.append(ImageSections.Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                        image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                         word_count += 1
                 prev_frame = curr_frame
             except cv2.error as e:
