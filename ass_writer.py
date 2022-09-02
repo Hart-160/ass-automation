@@ -106,7 +106,11 @@ def write_ass(sce, video, template=None) -> bool:
         print('任务开始…')
         ev_sections = DialogueSections.sce_handler(sce)
         if template != None:
-            ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
+            try:
+                ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
+            except IndexError:
+                print('请检查模板文件中有无多余换行！')
+                return False
         im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
 
         dialogue_list = []
@@ -126,9 +130,10 @@ def write_ass(sce, video, template=None) -> bool:
             if d['EventType'] == 'CloseWindow':
                 change_windows.append(d)
 
-        for ch in change_windows:
-            if 'Color' in ch:
-                colorfade_li.append(ch['Index'])
+        if change_windows != []:
+            for ch in change_windows:
+                if 'Color' in ch:
+                    colorfade_li.append(ch['Index'])
 
         for di, im in zip(dialogue_list, im_sections):
             if 'CloseWindow' in im:
@@ -137,7 +142,7 @@ def write_ass(sce, video, template=None) -> bool:
                     naming = 'OpenClose'
                     open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
 
-                if 'Color' in ch and im['Index'] in colorfade_li:
+                if change_windows != [] and 'Color' in ch and im['Index'] in colorfade_li:
                     naming = 'BlackFade'
                     extra_fad = '{\\fad(0,600)}'
                     text_fad = '{\\fad(0,500)}'
