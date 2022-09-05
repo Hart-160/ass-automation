@@ -2,7 +2,7 @@ from PySide2.QtWidgets import *
 from PySide2.QtUiTools import QUiLoader
 from generate_tmp import *
 import os
-from ass_writer import write_ass
+from ass_writer import AssBuilder
 
 '''
 这个部分负责GUI，是实质上的主程序
@@ -133,7 +133,7 @@ class ASS_Automation:
         if video=='' or sce=='':
             QMessageBox.critical(self.ui, '发生错误', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
-            success = write_ass(sce, video, template)
+            success = AssBuilder.write_ass(sce, video, template)
             if success:
                 QMessageBox.information(self.ui, '任务完成', '字幕已经生成！', QMessageBox.Ok, QMessageBox.Ok)
             else:

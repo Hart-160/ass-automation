@@ -143,6 +143,7 @@ class AssBuilder(object):
             title_list = []
             change_windows = []
             colorfade_li = []
+            jitter_list = []
 
             ass_dialogue = []
             ass_shader = []
@@ -155,6 +156,8 @@ class AssBuilder(object):
                     title_list.append(d)
                 if d['EventType'] == 'CloseWindow':
                     change_windows.append(d)
+                if d['EventType'] == 'Jitter':
+                    jitter_list.append(d)
 
             if change_windows != []:
                 for ch in change_windows:
@@ -230,6 +233,8 @@ class AssBuilder(object):
             print('任务完成！')
             if len(im_sections) != len(dialogue_list):
                 print('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
+            if jitter_list != []:
+                print('剧情内共有{}行抖动出现，请留意！'.format(len(jitter_list)))
             return True
 
 if __name__ == '__main__':
