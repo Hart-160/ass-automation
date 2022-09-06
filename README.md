@@ -3,27 +3,23 @@
 灵感来源于PJSK-ass-automation
 非常感谢Jeunette大佬的帮助！
 
-自己开发时python环境为3.8.7， 同时需要cv2(opencv)，PySide2等第三方库安装
+本人开发时python环境为3.8.7， 同时需要cv2(opencv)，PySide2等第三方库安装
 
-用ASS-automation从剧情文件生成剧情文本txt和翻译模板，文本链接我另外整理再放上来
-
-推荐使用轴机时套入模板，这样直接可以享受中文字幕+特效
+[精简版教程](https://www.bilibili.com/read/cv18462837) [详细版教程](https://docs.qq.com/doc/DTENkZGloYXNQZ01Y)
 
 运行ASS-automation，可以按直觉运行
-**轴机部分的视频路径必须是英文！！**
+
+其中所需sce文件可以在[这里](https://pan.baidu.com/s/1dPRssWslo_BEo07LnxpGrQ?pwd=8shu)获取，每期活动&生日会更新对应剧情
 
 因技术力限制，所有的进度和报错都会在终端窗口内显示
 轴机运行时窗口未响应是正常现象
 
 预设有对应三四种分辨率的，如果提示没有自己设备的分辨率，请务必检查自己的源是否有翻转，或者检查自己的分辨率是否有预设
-
-抖动检测无法检测到所有的抖动，不过可以检查所有BlackFade或NormalClose的遮罩
-如果和下一行遮罩时间间隔过短，也有可能是抖动出现
+如无预设可以查看详细教程或联系轴机作者
 
 ## WIP
 
 - 轴机进度条
 - 整行偏移的应对
-- 抖动的具体处理方法（会写在校对指南里）
 - 报错界面
-- 使用教程
+- 更准确的BlackFade判断（基于sce文本读取）
