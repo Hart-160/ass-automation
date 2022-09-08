@@ -124,7 +124,7 @@ class AssBuilder(object):
             if sh.AutoRead.get_preferred_ref(height, width) != None:
                 print('视频文件可能存在翻转，请将其调整为正确的方向！')
             return False
-        elif fps < 60:
+        elif fps < 55:
             print('本程序只支持60hz视频，请确保视频帧率符合要求！')
             return False
         else:

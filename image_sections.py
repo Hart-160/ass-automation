@@ -34,8 +34,8 @@ class ImageData(object):
     def is_dialogue(self,x1,x2,y1,y2) -> bool:
         #判断对话框
         self.dialogue = bool(False)
-        lower = np.array([160, 70, 180])
-        upper = np.array([168, 245, 225])
+        lower = np.array([160, 70, 170])
+        upper = np.array([168, 245, 245])
 
         im = self.image
         fhsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
