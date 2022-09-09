@@ -18,6 +18,10 @@ class SCEwords:
     jitter_sign = '［ゆれ：ウインドウ1'
     time_identifier = '時間：'
     live2d_appear = '［Live2Dキャラ表示：'
+    
+    background_name = '［背景DJK：'
+    live2d_disappear = '［Live2Dキャラ非表示：'
+    live2d_film = '［Live2Dキャラフィルム：'
 
     event_list = [title, sub_title, speaker]
 

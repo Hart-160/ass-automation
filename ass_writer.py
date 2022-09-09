@@ -199,10 +199,14 @@ class AssBuilder(object):
 
             tit_count = 0
             for ti in title_list:
-                title = Title(AssBuilder.__get_tstamp(0), AssBuilder.__get_tstamp(750), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
-                title = title.build_dialogue()
                 modify_index = tit_count - 1
                 ind = ti['Index'] + modify_index
+                for d in im_sections:
+                    if d['Index'] == ti['Index']:
+                        start = d['Start']
+                        break
+                title = Title(AssBuilder.__get_tstamp(start - 1230), AssBuilder.__get_tstamp(start - 480), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
+                title = title.build_dialogue()
                 ass_dialogue.insert(ind, title)
                 tit_count += 1
 

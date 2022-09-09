@@ -113,7 +113,15 @@ class DialogueSections:
             li = s.readlines()
 
         for l in li:
-            if l != '\n':
+            if l == '\n':
+                continue
+            elif gt.SCEwords.background_name in l:
+                continue
+            elif gt.SCEwords.live2d_disappear in l:
+                continue
+            if gt.SCEwords.live2d_film in l:
+                continue
+            else:
                 lis.append(l)
 
         event_list = []
