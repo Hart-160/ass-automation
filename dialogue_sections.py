@@ -115,11 +115,11 @@ class DialogueSections:
         for l in li:
             if l == '\n':
                 continue
-            elif gt.SCEwords.background_name in l:
+            elif l.startswith(gt.SCEwords.background_name):
                 continue
-            elif gt.SCEwords.live2d_disappear in l:
+            elif l.startswith(gt.SCEwords.live2d_disappear):
                 continue
-            if gt.SCEwords.live2d_film in l:
+            if l.startswith(gt.SCEwords.live2d_film):
                 continue
             else:
                 lis.append(l)
