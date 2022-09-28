@@ -35,7 +35,7 @@ class ImageData(object):
         #判断对话框
         self.dialogue = bool(False)
         lower = np.array([160, 70, 170])
-        upper = np.array([168, 245, 245])
+        upper = np.array([170, 245, 245])
 
         im = self.image
         fhsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
@@ -48,13 +48,16 @@ class ImageData(object):
             self.dialogue = bool(True)
         return self.dialogue
 
-    def is_word(self,x1,x2,y1,y2) -> bool:
-        #判断文字
-        self.word = bool(False)
+    def get_wordnz(self,x1,x2,y1,y2) -> int:
         img = self.image[y1:y2, x1:x2]
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
-        self.word_nz = np.count_nonzero(img)
+        return np.count_nonzero(img)
+
+    def is_word(self,x1,x2,y1,y2) -> bool:
+        #判断文字
+        self.word = bool(False)
+        self.word_nz = ImageData.get_wordnz(self, x1,x2,y1,y2)
         if self.word_nz >= 50:
             self.word = bool(True)
         return self.word
@@ -172,4 +175,9 @@ class ImageSections:
         return img_sections, alert
 
 if __name__ == '__main__':
-    pass
+    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\test\\ev51.mp4'
+    li = ImageSections.image_section_generator(video, 2344, 1080)
+    #ImageSections.image_section_generator(video, 2344, 1080)
+
+    for l in li:
+        print(l)

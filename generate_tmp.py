@@ -70,29 +70,6 @@ class TemplateUtils:
         输入sce路径，提取文本生成txt
         输出的str是文本路径，给模板生成用的
         '''
-        temp_filepath, filename = os.path.split(pth)
-        file_sole_name = os.path.splitext(filename)[0]
-        txt_name = file_sole_name + '.txt'
-        new_filepath = os.path.join(temp_filepath, txt_name)
-
-        if os.path.exists(new_filepath):
-            txt_name = file_sole_name + ' - copy' + '.txt'
-            new_filepath = os.path.join(temp_filepath, txt_name)
-        else:
-            pass
-
-        with open(pth, 'r', encoding='utf-8') as sce:
-            origin = []
-            ori = sce.readlines()
-            for o in ori:
-                if '＠' in o:
-                    s = TemplateUtils.__clean_text(o)
-                    origin.append(s)
-                elif '{' in o or '}' in o:
-                    continue
-                elif not o == '\n':
-                    origin.append(o)
-
         def talker_devider(talker):
             tmp = talker.replace(SCEwords.speaker, '')
             talk_person = tmp.replace(SCEwords.end, '')
@@ -106,86 +83,80 @@ class TemplateUtils:
         def talker_builder(talk_person):
             talker = SCEwords.speaker + talk_person + SCEwords.end
             return talker
+        
+        temp_filepath, filename = os.path.split(pth)
+        file_sole_name = os.path.splitext(filename)[0]
+        txt_name = file_sole_name + '.txt'
+        new_filepath = os.path.join(temp_filepath, txt_name)
 
-        search = 10
-        with open(new_filepath, 'w+', encoding='utf-8') as f:
-            talker = ''
-            talk_person = ''
-            for i in range(len(origin)):
-                line = origin[i]
+        if os.path.exists(new_filepath):
+            txt_name = file_sole_name + ' - copy' + '.txt'
+            new_filepath = os.path.join(temp_filepath, txt_name)
+        else:
+            pass
+
+        lees = []
+        with open(pth, 'r+', encoding='utf-8') as s:
+            li = s.readlines()
+        
+        subli = []
+        for l in li:
+            if l == '\n':
+                lees.append(subli)
+                subli = []
+            else:
+                subli.append(l)
+
+        lis = []
+        for lee in lees:
+            if lee != []:
+                lis.append(lee)
+
+        write_data = ''
+        talker = ''
+        for block in lis:
+            write_body = []
+            for line in block:
                 if SCEwords.title in line:
                     line = line[:-1]
-                    f.write(line)
+                    write_body.append(line)
                 elif SCEwords.sub_title in line:
-                    line = '\n' + line
-                    f.write(line)
+                    write_body.append(line)
+                elif line.startswith(SCEwords.speaker):
+                    write_body.append(line)
+                    talker = talker_devider(line)
+                elif line.startswith(SCEwords.chara_voice):
+                    voicer = voice_devider(line)
+                    if voicer == talker:
+                        talker = voicer
                 elif line.startswith('\t'):
                     continue
-                elif SCEwords.speaker in line:
-                    body = []
-                    for j in range(1, search):
-                        if i+j >= len(origin):
-                            break
-                        lin = origin[i+j]
-                        if lin.startswith(SCEwords.live2d_appear):
-                            continue
-                        elif not lin.startswith(SCEwords.start):
-                            if '＠' in lin:
-                                temp = TemplateUtils.__clean_text(lin)
-                                body.append(temp)
-                            elif lin.startswith('\t'):
-                                continue
-                            else:
-                                body.append(lin)
-                        elif lin.startswith(SCEwords.speaker):
-                            break
-                        elif lin.startswith(SCEwords.chara_voice) and body != []:
-                            break
-                        else:
-                            continue
-                    if body == []:
-                        continue
+                elif line.startswith('\ufeff{ Main'):
+                    continue
+                elif not line.startswith(SCEwords.start):
+                    if '＠' in line:
+                        temp = TemplateUtils.__clean_text(line)
+                        write_body.append(temp)
                     else:
-                        talker = line
-                        talk_person = talker_devider(talker)
-                        line = '\n' + line
-                        f.write(line)
-                elif SCEwords.chara_voice in line and not SCEwords.speaker in origin[i-1]:
-                    tker = voice_devider(line)
-                    body = []
-                    if tker == talk_person:
-                        talker = talker_builder(tker)
-                    else:
-                        pass
-                    for j in range(1,search):
-                        if i+j >= len(origin):
-                            break
-                        lin = origin[i+j]
-                        if not lin.startswith(SCEwords.start):
-                            if '＠' in lin:
-                                temp = TemplateUtils.__clean_text(lin)
-                                body.append(temp)
-                            elif lin.startswith('\t'):
-                                continue
-                            else:
-                                body.append(lin)
-                        elif lin.startswith(SCEwords.live2d_appear):
-                            continue
-                        elif lin.startswith(SCEwords.speaker):
-                            break
-                        elif lin.startswith(SCEwords.chara_voice) and body != []:
-                            break
-                        else:
-                            continue
-                    if body == []:
-                        continue
-                    else:
-                        talk = '\n' + talker
-                        f.write(talk)
-                elif not SCEwords.start in line:
-                    f.write(line)
+                        temp = line
+                        write_body.append(temp)
                 else:
                     continue
+            
+            if write_body == []:
+                continue
+
+            if not write_body[0].startswith(SCEwords.start):
+                talk_person = talker_builder(talker)
+                write_body.insert(0, talk_person)
+            
+            write_body[-1] = write_body[-1] + '\n'
+            j = ''
+            write_str = j.join(write_body)
+            write_data += write_str
+
+        with open(new_filepath, 'w+', encoding='utf-8') as f:
+            f.write(write_data)
 
         return new_filepath
     

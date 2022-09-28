@@ -5,10 +5,10 @@ automatic
 automatic
 
 [Open Box Offset] ms
-115
+0
 
 [Normal Close Offset] ms
-60
+0
 
 [Black Fade-in Offset] ms
-350
+0

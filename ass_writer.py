@@ -173,7 +173,7 @@ class AssBuilder(object):
 
                     if change_windows != [] and 'Color' in ch and im['Index'] in colorfade_li:
                         naming = 'BlackFade'
-                        extra_fad = '{\\fad(0,600)}'
+                        extra_fad = '{\\fad(0,500)}'
                         text_fad = '{\\fad(0,500)}'
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
                     else:

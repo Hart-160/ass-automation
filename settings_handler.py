@@ -23,7 +23,7 @@ class AutoRead(object):
         refs = []
         li = os.listdir(os.getcwd())
         for l in li:
-            if '[' in l and ']reference' in l:
+            if '[' in l and ']reference.txt' in l:
                 refs.append(l)
 
         for r in refs:
@@ -35,7 +35,7 @@ class AutoRead(object):
         refs = []
         li = os.listdir(os.getcwd())
         for l in li:
-            if '[' in l and ']untitled' in l:
+            if '[' in l and ']untitled.ass' in l:
                 refs.append(l)
 
         for r in refs:
