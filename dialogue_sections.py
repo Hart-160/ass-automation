@@ -1,4 +1,5 @@
 import generate_tmp as gt
+from itertools import chain
 
 '''
 这个部分负责从sce提取出可供视频分析校验的列表
@@ -104,6 +105,13 @@ class DialogueSections:
         res = li[0]
         return res
 
+    def __count_nonbracket(li):
+        non_bracket = 0
+        for l in li:
+            if not l.startswith(gt.SCEwords.start):
+                non_bracket += 1
+        return non_bracket
+
     def sce_handler(route) -> list:
         '''
         输入sce路径，输出一个包含各节点的列表
@@ -118,12 +126,45 @@ class DialogueSections:
                 lees.append(subli)
                 subli = []
             else:
-                subli.append(l)
+                if l.startswith(gt.SCEwords.background_name):
+                    continue
+                if l.startswith(gt.SCEwords.live2d_disappear):
+                    continue
+                if l.startswith(gt.SCEwords.live2d_film):
+                    continue
+                if l.startswith(gt.SCEwords.bgm_notice):
+                    continue
+                if l.startswith(gt.SCEwords.se_notice):
+                    continue
+                if l.startswith(gt.SCEwords.wait):
+                    continue
+                if l.startswith(gt.SCEwords.sync_start):
+                    continue
+                if l.startswith(gt.SCEwords.sync_end):
+                    continue
+                if l.startswith('}'):
+                    continue
+                if l.startswith('\t'):
+                    continue
+                else:
+                    subli.append(l)
+        if subli != []:
+            lees.append(subli)
+            subli = []
 
         lis = []
         for lee in lees:
             if lee != []:
                 lis.append(lee)
+
+        i = 0
+        while i < len(lis):
+            if DialogueSections.__count_nonbracket(lis[i]) == 0 and DialogueSections.__count_nonbracket(lis[i-1]) == 0:
+                lis[i-1] = list(chain(lis[i-1], lis[i]))
+                lis.remove(lis[i])
+            if lis[i-1] == lis[-1]:
+                break
+            i += 1
 
         event_list = []
         index = 1
@@ -154,16 +195,16 @@ class DialogueSections:
 
                 elif gt.SCEwords.close_window in line:
                     # 判断对话框消失
-                    if gt.SCEwords.fade_in in lis[i-1]:
+                    if gt.SCEwords.fade_in in block[i-1]:
                         # 带有颜色变化的对话框消失
                         cw = CloseWindow(index - 1, 'CloseWindow')
-                        temp = lis[i-1].replace(gt.SCEwords.fade_in, '')
+                        temp = block[i-1].replace(gt.SCEwords.fade_in, '')
                         color = temp[0]
                         cw.color = color
-                        if gt.SCEwords.fade_time in lis[i-1]:
-                            temp1 = lis[i-1].find(gt.SCEwords.fade_time)
-                            temp2 = lis[i-1].find(gt.SCEwords.end_backup, temp1)
-                            temp = lis[i-1][temp1:temp2]
+                        if gt.SCEwords.fade_time in block[i-1]:
+                            temp1 = block[i-1].find(gt.SCEwords.fade_time)
+                            temp2 = block[i-1].find(gt.SCEwords.end_backup, temp1)
+                            temp = block[i-1][temp1:temp2]
                             fade = temp.split('：')[1]
                             cw.fade = fade
                     else:
@@ -253,6 +294,7 @@ class DialogueSections:
         tmp_li = []
         for tm in tem:
             tm = tm.replace('\n', '')
+            tm = tm.replace('\u2026', '...')
             tm = tm.split(':')
             tmp_li.append(tm)
 

@@ -5,6 +5,7 @@ import os
 '''
 
 class SCEwords:
+    #重要的标识符
     title = '［タイトル：'
     sub_title = '［サブタイトル：'
     speaker = '［話：'
@@ -13,15 +14,21 @@ class SCEwords:
     fade_in = '［フェードイン：'
     fade_time = 'フェード：'
     close_window = '［ウインドウ非表示：'
-    open_window = '［表示：'
+    open_window = '［表示：ウインドウ1'
     font_size = '［ウインドウフォントサイズ：'
     jitter_sign = '［ゆれ：ウインドウ1'
     time_identifier = '時間：'
     live2d_appear = '［Live2Dキャラ表示：'
     
+    #需要去除的标识符
     background_name = '［背景DJK：'
     live2d_disappear = '［Live2Dキャラ非表示：'
     live2d_film = '［Live2Dキャラフィルム：'
+    bgm_notice = '［音BGM'
+    se_notice = '［音SE'
+    wait = '［待：'
+    sync_start = '［@Parallel：'
+    sync_end = '［@End：'
 
     event_list = [title, sub_title, speaker]
 
@@ -118,7 +125,6 @@ class TemplateUtils:
             write_body = []
             for line in block:
                 if SCEwords.title in line:
-                    line = line[:-1]
                     write_body.append(line)
                 elif SCEwords.sub_title in line:
                     write_body.append(line)

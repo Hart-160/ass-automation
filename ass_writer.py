@@ -4,6 +4,7 @@ import settings_handler as sh
 import os
 import cv2
 import shutil
+import time
 
 '''
 这个部分负责以视频分析列表和sce分析列表为基础写入字幕文件
@@ -108,6 +109,7 @@ class AssBuilder(object):
         cap = cv2.VideoCapture(video)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         fps = round(cap.get(cv2.CAP_PROP_FPS))
         cap.release()
 
@@ -128,8 +130,8 @@ class AssBuilder(object):
             print('本程序只支持60hz视频，请确保视频帧率符合要求！')
             return False
         else:
+            t1 = time.time()
             print('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
-            print('任务开始…')
             ev_sections = DialogueSections.sce_handler(sce)
             if template != None:
                 try:
@@ -171,7 +173,7 @@ class AssBuilder(object):
                         naming = 'OpenClose'
                         open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
 
-                    if change_windows != [] and 'Color' in ch and im['Index'] in colorfade_li:
+                    if change_windows != [] and im['Index'] in colorfade_li:
                         naming = 'BlackFade'
                         extra_fad = '{\\fad(0,500)}'
                         text_fad = '{\\fad(0,500)}'
@@ -234,7 +236,12 @@ class AssBuilder(object):
                 for dial in ass_dialogue:
                     a.write(dial + '\n')
 
-            print('任务完成！')
+            t2 = time.time()
+            process_time = round(t2 - t1, 2)
+            length = round(total_frame / fps, 2)
+            print('程序运行时间：{}s'.format(process_time))
+            print('视频时长：{}s'.format(length))
+            print('程序运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
             if len(im_sections) != len(dialogue_list):
                 print('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
             if jitter_list != []:

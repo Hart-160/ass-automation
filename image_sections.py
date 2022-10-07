@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from tqdm import tqdm
 import settings_handler as sh
 
 '''
@@ -74,6 +75,10 @@ class ImageSections:
         '''
         cap = cv2.VideoCapture(vid)
         total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+        process = tqdm(range(total_frame))
+        process.set_description('轴机进度')
+
         image_sections = []
         word_count = 1
 
@@ -90,48 +95,41 @@ class ImageSections:
 
         start = ''
         end = ''
-        process_count = 0
         spec = {}
 
-        while success:
-            try:
-                success, c_frame = cap.read()
-                ms = cap.get(cv2.CAP_PROP_POS_MSEC)
-                f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-                perc = round(f / total_frame * 100, 2)
-                curr_frame = ImageData(c_frame)
-                curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
-                curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
-                
-                if curr_frame.dialogue == prev_frame.dialogue:
-                    if curr_frame.dialogue:
-                        if curr_frame.word == False and prev_frame.word != curr_frame.word:
-                            end = ms
-                            process_count += 1
-                            if process_count % 5 == 0:    
-                                print('任务进度：{}%'.format(perc))
-                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
-                            start = ms
-                            spec = {}
-                            word_count += 1
-                else:
-                    if curr_frame.dialogue:
-                        start = ms
-                        spec = {'OpenWindow':True}
-                        process_count += 1
-                        if process_count % 5 == 0:    
-                            print('任务进度：{}%'.format(perc))
-                    else:
-                        end = ms
-                        spec = ImageSections.__Merge(spec, {'CloseWindow':True})
-                        process_count += 1
-                        if process_count % 5 == 0:    
-                            print('任务进度：{}%'.format(perc))
-                        image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
-                        word_count += 1
-                prev_frame = curr_frame
-            except cv2.error as e:
+        for _ in process:
+            if not success:
                 break
+            else:
+                try:
+                    success, c_frame = cap.read()
+                    ms = cap.get(cv2.CAP_PROP_POS_MSEC)
+                    f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                    perc = round(f / total_frame * 100, 2)
+                    curr_frame = ImageData(c_frame)
+                    curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
+                    curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
+                    
+                    if curr_frame.dialogue == prev_frame.dialogue:
+                        if curr_frame.dialogue:
+                            if curr_frame.word == False and prev_frame.word != curr_frame.word:
+                                end = ms
+                                image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                                start = ms
+                                spec = {}
+                                word_count += 1
+                    else:
+                        if curr_frame.dialogue:
+                            start = ms
+                            spec = {'OpenWindow':True}
+                        else:
+                            end = ms
+                            spec = ImageSections.__Merge(spec, {'CloseWindow':True})
+                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                            word_count += 1
+                    prev_frame = curr_frame
+                except cv2.error:
+                    break
         cap.release()
 
         return image_sections
@@ -175,9 +173,4 @@ class ImageSections:
         return img_sections, alert
 
 if __name__ == '__main__':
-    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\test\\ev51.mp4'
-    li = ImageSections.image_section_generator(video, 2344, 1080)
-    #ImageSections.image_section_generator(video, 2344, 1080)
-
-    for l in li:
-        print(l)
+    pass
