@@ -153,7 +153,9 @@ class ASS_Automation:
             QMessageBox.critical(self.ui, '发生错误', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.ui.output_window.clear()
-            thread1 = Thread(target=AssBuilder.write_ass(ASS_Automation.sce, ASS_Automation.video, ASS_Automation.template))
+            def run():
+                AssBuilder.write_ass(ASS_Automation.sce, ASS_Automation.video, ASS_Automation.template)
+            thread1 = Thread(target=run)
             thread1.start()
     
 
