@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from tqdm import tqdm
+from PySide2.QtCore import Signal,QObject
 import settings_handler as sh
 
 '''
@@ -63,7 +63,9 @@ class ImageData(object):
             self.word = bool(True)
         return self.word
 
-class ImageSections:
+class ImageSections(QObject):
+    update_bar = Signal(int)
+    setmax = Signal(int)
 
     def __Merge(dict1, dict2): 
         res = {**dict1, **dict2} 
@@ -75,9 +77,7 @@ class ImageSections:
         '''
         cap = cv2.VideoCapture(vid)
         total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
-        process = tqdm(range(total_frame))
-        process.set_description('轴机进度')
+        pb.setmax.emit(total_frame)
 
         image_sections = []
         word_count = 1
@@ -89,6 +89,8 @@ class ImageSections:
         x_1,y_1,x_2,y_2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_WORD_MX, width, height))
         
         success, p_frame = cap.read()
+        f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+        pb.update_bar.emit(f)
         prev_frame = ImageData(p_frame)
         prev_frame.dialogue = prev_frame.is_dialogue(x1, x2, y1, y2)
         prev_frame.word = prev_frame.is_word(x_1, x_2, y_1, y_2)
@@ -97,39 +99,36 @@ class ImageSections:
         end = ''
         spec = {}
 
-        for _ in process:
-            if not success:
-                break
-            else:
-                try:
-                    success, c_frame = cap.read()
-                    ms = cap.get(cv2.CAP_PROP_POS_MSEC)
-                    f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
-                    perc = round(f / total_frame * 100, 2)
-                    curr_frame = ImageData(c_frame)
-                    curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
-                    curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
-                    
-                    if curr_frame.dialogue == prev_frame.dialogue:
-                        if curr_frame.dialogue:
-                            if curr_frame.word == False and prev_frame.word != curr_frame.word:
-                                end = ms
-                                image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
-                                start = ms
-                                spec = {}
-                                word_count += 1
-                    else:
-                        if curr_frame.dialogue:
-                            start = ms
-                            spec = {'OpenWindow':True}
-                        else:
+        while success:
+            try:
+                success, c_frame = cap.read()
+                ms = cap.get(cv2.CAP_PROP_POS_MSEC)
+                f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+                pb.update_bar.emit(f)
+                curr_frame = ImageData(c_frame)
+                curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
+                curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
+                
+                if curr_frame.dialogue == prev_frame.dialogue:
+                    if curr_frame.dialogue:
+                        if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             end = ms
-                            spec = ImageSections.__Merge(spec, {'CloseWindow':True})
                             image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                            start = ms
+                            spec = {}
                             word_count += 1
-                    prev_frame = curr_frame
-                except cv2.error:
-                    break
+                else:
+                    if curr_frame.dialogue:
+                        start = ms
+                        spec = {'OpenWindow':True}
+                    else:
+                        end = ms
+                        spec = ImageSections.__Merge(spec, {'CloseWindow':True})
+                        image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                        word_count += 1
+                prev_frame = curr_frame
+            except cv2.error:
+                break
         cap.release()
 
         return image_sections
@@ -171,6 +170,8 @@ class ImageSections:
             img['Index'] = i+1
 
         return img_sections, alert
+
+pb = ImageSections()
 
 if __name__ == '__main__':
     pass

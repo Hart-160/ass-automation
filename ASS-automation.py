@@ -1,8 +1,13 @@
+import os
+from threading import Thread
+
 from PySide2.QtWidgets import *
 from PySide2.QtUiTools import QUiLoader
+from PySide2.QtCore import *
+
 from generate_tmp import *
-import os
-from ass_writer import AssBuilder
+from ass_writer import *
+from image_sections import *
 
 '''
 这个部分负责GUI，是实质上的主程序
@@ -73,6 +78,7 @@ class Generate_TMP:
         self.subwin = Entrance()
         self.subwin.ui.show()
         self.ui.close()
+
 class ASS_Automation:
 
     def __init__(self):
@@ -83,13 +89,17 @@ class ASS_Automation:
         self.ui.choose_sce.clicked.connect(self.select_sce)
         self.ui.choose_template.clicked.connect(self.select_template)
         self.ui.back_main.clicked.connect(self.back)
+        self.ui.generate.clicked.connect(self.start_ass)
 
+        #placeholders below
         self.ui.video_route.setPlaceholderText('视频文件为必填项，且路径不能包含中文')
-        self.ui.sce_route.setPlaceholderText('SCE文件为必填项，请确保与其余两项对应')
-        self.ui.template_route.setPlaceholderText('模板为可选项，请确保与其余两项对应')
+        self.ui.sce_route.setPlaceholderText('SCE文件为必填项，请确保与视频文件对应')
+        self.ui.template_route.setPlaceholderText('模板为可选项，请确保与其余两项对应') 
 
-        #button below
-        self.ui.generate.clicked.connect(self.run)
+        #connection below
+        pb.setmax.connect(self.set_max)
+        pb.update_bar.connect(self.set_bar)
+        ab.text_output.connect(self.outputWritten)
 
     def select_video(self):
         videoPath, _  = QFileDialog.getOpenFileName(
@@ -123,21 +133,29 @@ class ASS_Automation:
         self.subwin.ui.show()
         self.ui.close()
 
-    def run(self):
-        video = self.ui.video_route.text()
-        sce = self.ui.sce_route.text()
-        template = self.ui.template_route.text()
-        if len(template) == 0:
-            template = None
+    def outputWritten(self, text):
+        self.ui.output_window.append(text)
 
-        if video=='' or sce=='':
+    def set_max(self, mvalue):
+        self.ui.progressBar.setMaximum(mvalue)
+
+    def set_bar(self, value):
+        self.ui.progressBar.setValue(value)
+
+    def start_ass(self):
+        ASS_Automation.video = self.ui.video_route.text()
+        ASS_Automation.sce = self.ui.sce_route.text()
+        ASS_Automation.template = self.ui.template_route.text()
+        if len(ASS_Automation.template) == 0:
+            ASS_Automation.template = None
+
+        if ASS_Automation.video=='' or ASS_Automation.sce=='':
             QMessageBox.critical(self.ui, '发生错误', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
-            success = AssBuilder.write_ass(sce, video, template)
-            if success:
-                QMessageBox.information(self.ui, '任务完成', '字幕已经生成！', QMessageBox.Ok, QMessageBox.Ok)
-            else:
-                QMessageBox.critical(self.ui, '发生错误', '请检查终端报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
+            self.ui.output_window.clear()
+            thread1 = Thread(target=AssBuilder.write_ass(ASS_Automation.sce, ASS_Automation.video, ASS_Automation.template))
+            thread1.start()
+    
 
 if __name__ == '__main__':
     app = QApplication([])

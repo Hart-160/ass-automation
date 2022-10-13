@@ -1,6 +1,7 @@
 from dialogue_sections import DialogueSections
 from image_sections import ImageSections
 import settings_handler as sh
+from PySide2.QtCore import Signal,QObject
 import os
 import cv2
 import shutil
@@ -65,7 +66,9 @@ class Caution(ASS_Line):
         self.layer = 1
         self.style = 'CAUTION'
 
-class AssBuilder(object):
+class AssBuilder(QObject):
+    text_output = Signal(str)
+
     def __get_tstamp(milliseconds) -> str:
         '''
         将视频进行时的毫秒数转化为aegisub中的时间戳
@@ -105,7 +108,7 @@ class AssBuilder(object):
 
         return effect + shelter_template
 
-    def write_ass(sce, video, template=None) -> bool:
+    def write_ass(sce, video, template=None):
         cap = cv2.VideoCapture(video)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -114,31 +117,35 @@ class AssBuilder(object):
         cap.release()
 
         if width == 0 or height == 0:
-            print('请确保视频路径不包含中文字符！')
-            return False
-        print('视频帧宽度：{}'.format(width))
-        print('视频帧高度：{}'.format(height))
-        print('FPS: {}'.format(fps))
+            ab.text_output.emit('任务失败！')
+            ab.text_output.emit('请确保视频路径不包含中文字符！')
+            return
+        ab.text_output.emit('视频帧宽度：{}'.format(width))
+        ab.text_output.emit('视频帧高度：{}'.format(height))
+        ab.text_output.emit('FPS: {}'.format(fps))
 
         ref = sh.AutoRead.get_preferred_ref(width, height)
         if ref == None:
-            print('未找到Reference文件！请检查是否存在与视频分辨率相符的Reference！')
+            ab.text_output.emit('任务失败！')
+            ab.text_output.emit('未找到Reference文件！请检查是否存在与视频分辨率相符的Reference！')
             if sh.AutoRead.get_preferred_ref(height, width) != None:
-                print('视频文件可能存在翻转，请将其调整为正确的方向！')
-            return False
-        elif fps < 55:
-            print('本程序只支持60hz视频，请确保视频帧率符合要求！')
-            return False
+                ab.text_output.emit('视频文件可能存在翻转，请将其调整为正确的方向！')
+            return
+        if fps < 55:
+            ab.text_output.emit('任务失败！')
+            ab.text_output.emit('本程序只支持60hz视频，请确保视频帧率符合要求！')
+            return
         else:
             t1 = time.time()
-            print('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
+            ab.text_output.emit('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
             ev_sections = DialogueSections.sce_handler(sce)
             if template != None:
                 try:
                     ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
                 except IndexError:
-                    print('请检查模板文件中有无多余换行！')
-                    return False
+                    ab.text_output.emit('任务失败！')
+                    ab.text_output.emit('请检查模板文件中有无多余换行！')
+                    return
             im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
 
             dialogue_list = []
@@ -237,16 +244,16 @@ class AssBuilder(object):
                     a.write(dial + '\n')
 
             t2 = time.time()
-            process_time = round(t2 - t1, 2)
-            length = round(total_frame / fps, 2)
-            print('程序运行时间：{}s'.format(process_time))
-            print('视频时长：{}s'.format(length))
-            print('程序运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
+            process_time = t2 - t1
+            length = total_frame / fps
+            ab.text_output.emit('任务完成！')
+            ab.text_output.emit('运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
             if len(im_sections) != len(dialogue_list):
-                print('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
+                ab.text_output.emit('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
             if jitter_list != []:
-                print('剧情内共有{}行抖动出现，请留意！'.format(len(jitter_list)))
-            return True
+                ab.text_output.emit('剧情内共有{}行抖动出现，请留意！'.format(len(jitter_list)))
+
+ab = AssBuilder()
 
 if __name__ == '__main__':
     pass

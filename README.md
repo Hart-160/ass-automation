@@ -16,8 +16,6 @@
 
     pip install PySide2
 
-    pip install tqdm
-
 ## 作者联系方式
 
 - Bilibili：[广间Hiroma](https://space.bilibili.com/11889810)
@@ -26,6 +24,8 @@
 
 ## WIP
 
-- 整行偏移的应对
-- 终端提示做进GUI内
-- 更好的读取对话边框颜色方法（基于颜色平均值）
+- [ ] 整行偏移的应对
+
+- [ ] 更好的读取对话边框颜色方法（基于颜色平均值）
+
+- [ ] *更多需求请提出**issue***
