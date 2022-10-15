@@ -174,7 +174,6 @@ class DialogueSections:
             body = []
             for i in range(len(block)):
                 line = block[i]
-                line = line.replace('\u3000', '')
 
                 if 'タイトル' in line and line.startswith(gt.SCEwords.start):
                     #判断标题和副标题
@@ -187,9 +186,6 @@ class DialogueSections:
                         tit = Subtitle(index, title_body)
                     event_list.append(tit.get_dict())
 
-                elif line.startswith('\t'):
-                    continue
-
                 elif line.startswith('\ufeff{ Main'):
                     continue
 
@@ -197,7 +193,7 @@ class DialogueSections:
                     # 判断对话框消失
                     if gt.SCEwords.fade_in in block[i-1]:
                         # 带有颜色变化的对话框消失
-                        cw = CloseWindow(index - 1, 'CloseWindow')
+                        cw = CloseWindow(index - 1)
                         temp = block[i-1].replace(gt.SCEwords.fade_in, '')
                         color = temp[0]
                         cw.color = color
@@ -295,6 +291,7 @@ class DialogueSections:
         for tm in tem:
             tm = tm.replace('\n', '')
             tm = tm.replace('\u2026', '...')
+            tm = tm.replace('\u3000', '')
             tm = tm.split(':')
             tmp_li.append(tm)
 

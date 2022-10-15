@@ -49,7 +49,7 @@ class ImageData(object):
             self.dialogue = bool(True)
         return self.dialogue
 
-    def get_wordnz(self,x1,x2,y1,y2) -> int:
+    def __get_wordnz(self,x1,x2,y1,y2) -> int:
         img = self.image[y1:y2, x1:x2]
         img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
         ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
@@ -58,14 +58,14 @@ class ImageData(object):
     def is_word(self,x1,x2,y1,y2) -> bool:
         #判断文字
         self.word = bool(False)
-        self.word_nz = ImageData.get_wordnz(self, x1,x2,y1,y2)
+        self.word_nz = ImageData.__get_wordnz(self, x1,x2,y1,y2)
         if self.word_nz >= 50:
             self.word = bool(True)
         return self.word
 
 class ImageSections(QObject):
-    update_bar = Signal(int)
-    setmax = Signal(int)
+    update_bar = Signal(int) #向GUI发送进度，更新进度条
+    setmax = Signal(int)  #向GUI发送进度条最大值，并设置
 
     def __Merge(dict1, dict2): 
         res = {**dict1, **dict2} 
@@ -171,7 +171,7 @@ class ImageSections(QObject):
 
         return img_sections, alert
 
-pb = ImageSections()
+pb = ImageSections() #为GUI信号输出创建的实例
 
 if __name__ == '__main__':
     pass

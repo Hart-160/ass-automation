@@ -67,7 +67,8 @@ class Caution(ASS_Line):
         self.style = 'CAUTION'
 
 class AssBuilder(QObject):
-    text_output = Signal(str)
+    text_output = Signal(str) #文字输出到GUI主线程
+    send_status = Signal(bool) #告知GUI运行结果，弹出提示框，以及使界面上的两个按钮可用
 
     def __get_tstamp(milliseconds) -> str:
         '''
@@ -95,6 +96,9 @@ class AssBuilder(QObject):
         return tstamp
     
     def __shader_builder(length:int, width, height):
+        '''
+        根据名字长度以及以分辨率为基础的reference生成随名字长度变化的遮罩字幕
+        '''
         x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
         x3b = x2b
         var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
@@ -109,6 +113,9 @@ class AssBuilder(QObject):
         return effect + shelter_template
 
     def write_ass(sce, video, template=None):
+        '''
+        根据视频文件和sce文件，生成字幕文件（其中翻译模板template为选择性添加）
+        '''
         cap = cv2.VideoCapture(video)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -117,8 +124,8 @@ class AssBuilder(QObject):
         cap.release()
 
         if width == 0 or height == 0:
-            ab.text_output.emit('任务失败！')
             ab.text_output.emit('请确保视频路径不包含中文字符！')
+            ab.send_status.emit(False)
             return
         ab.text_output.emit('视频帧宽度：{}'.format(width))
         ab.text_output.emit('视频帧高度：{}'.format(height))
@@ -126,14 +133,14 @@ class AssBuilder(QObject):
 
         ref = sh.AutoRead.get_preferred_ref(width, height)
         if ref == None:
-            ab.text_output.emit('任务失败！')
             ab.text_output.emit('未找到Reference文件！请检查是否存在与视频分辨率相符的Reference！')
             if sh.AutoRead.get_preferred_ref(height, width) != None:
                 ab.text_output.emit('视频文件可能存在翻转，请将其调整为正确的方向！')
+            ab.send_status.emit(False)
             return
         if fps < 55:
-            ab.text_output.emit('任务失败！')
             ab.text_output.emit('本程序只支持60hz视频，请确保视频帧率符合要求！')
+            ab.send_status.emit(False)
             return
         else:
             t1 = time.time()
@@ -143,8 +150,8 @@ class AssBuilder(QObject):
                 try:
                     ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
                 except IndexError:
-                    ab.text_output.emit('任务失败！')
                     ab.text_output.emit('请检查模板文件中有无多余换行！')
+                    ab.send_status.emit(False)
                     return
             im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
 
@@ -246,14 +253,14 @@ class AssBuilder(QObject):
             t2 = time.time()
             process_time = t2 - t1
             length = total_frame / fps
-            ab.text_output.emit('任务完成！')
             ab.text_output.emit('运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
             if len(im_sections) != len(dialogue_list):
                 ab.text_output.emit('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
             if jitter_list != []:
                 ab.text_output.emit('剧情内共有{}行抖动出现，请留意！'.format(len(jitter_list)))
+            ab.send_status.emit(True)
 
-ab = AssBuilder()
+ab = AssBuilder() #为GUI信号输出创建的实例
 
 if __name__ == '__main__':
     pass

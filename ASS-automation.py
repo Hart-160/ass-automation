@@ -100,6 +100,7 @@ class ASS_Automation:
         pb.setmax.connect(self.set_max)
         pb.update_bar.connect(self.set_bar)
         ab.text_output.connect(self.outputWritten)
+        ab.send_status.connect(self.change_availability)
 
     def select_video(self):
         videoPath, _  = QFileDialog.getOpenFileName(
@@ -134,30 +135,47 @@ class ASS_Automation:
         self.ui.close()
 
     def outputWritten(self, text):
+        #将文字打印到textBrowser上
         self.ui.output_window.append(text)
 
     def set_max(self, mvalue):
+        #设置进度条最大值
         self.ui.progressBar.setMaximum(mvalue)
 
     def set_bar(self, value):
+        #设置进度条的值
         self.ui.progressBar.setValue(value)
 
-    def start_ass(self):
-        ASS_Automation.video = self.ui.video_route.text()
-        ASS_Automation.sce = self.ui.sce_route.text()
-        ASS_Automation.template = self.ui.template_route.text()
-        if len(ASS_Automation.template) == 0:
-            ASS_Automation.template = None
+    def change_availability(self, yes:bool):
+        #传入参数时告知主线程GUI取消两个按钮的disable状态
+        if yes:
+            QMessageBox.information(self.ui, '任务完成', '字幕文件已生成！<br> 文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
+            self.ui.back_main.setDisabled(False)
+            self.ui.generate.setDisabled(False)
+        else:
+            QMessageBox.critical(self.ui, '发生错误', '请检查报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
+            self.ui.back_main.setDisabled(False)
+            self.ui.generate.setDisabled(False)
 
-        if ASS_Automation.video=='' or ASS_Automation.sce=='':
+    def start_ass(self):
+        video = self.ui.video_route.text()
+        sce = self.ui.sce_route.text()
+        template = self.ui.template_route.text()
+        if len(template) == 0:
+            template = None
+
+        if video=='' or sce=='':
             QMessageBox.critical(self.ui, '发生错误', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.ui.output_window.clear()
-            def run():
-                AssBuilder.write_ass(ASS_Automation.sce, ASS_Automation.video, ASS_Automation.template)
+            self.ui.back_main.setDisabled(True)
+            self.ui.generate.setDisabled(True)
+            def run(): 
+                #必须是另起一个函数包装好自己需要的函数，然后开启thread
+                #函数内不能包含跟self.ui相关的内容，会出现跨线程的bug
+                AssBuilder.write_ass(sce, video, template)
             thread1 = Thread(target=run)
             thread1.start()
-    
 
 if __name__ == '__main__':
     app = QApplication([])
