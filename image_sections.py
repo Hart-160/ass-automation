@@ -32,26 +32,29 @@ class ImageData(object):
             is_dialogue = True
         return is_dialogue
     
-    def is_dialogue(self,x1,x2,y1,y2) -> bool:
+    def __is_valid_color(self,x1,x2,y1,y2) -> bool:
         #判断对话框
-        self.dialogue = bool(False)
-        lower = np.array([160, 70, 170])
-        upper = np.array([170, 245, 245])
+        dialogue = bool(False)
+
+        h_min, s_min, v_min = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_LOWER_RANGE))
+        h_max, s_max, v_max = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_UPPER_RANGE))
+        lower = np.array([h_min, s_min, v_min])
+        upper = np.array([h_max, s_max, v_max])
 
         im = self.image
-        fhsv = cv2.cvtColor(im, cv2.COLOR_RGB2HSV)
+        fhsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
         mask = cv2.inRange(fhsv, lower, upper)
         im = cv2.bitwise_and(im, im, mask=mask)
-        im = cv2.cvtColor(im, cv2.COLOR_RGB2GRAY)
+        im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
         ret, im = cv2.threshold(im, 80, 255, cv2.THRESH_BINARY)
         read_result = ImageData.__read_pixel(im, x1, x2, y1, y2)
         if read_result:
-            self.dialogue = bool(True)
-        return self.dialogue
+            dialogue = bool(True)
+        return dialogue
 
     def __get_wordnz(self,x1,x2,y1,y2) -> int:
         img = self.image[y1:y2, x1:x2]
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
         return np.count_nonzero(img)
 
@@ -62,6 +65,24 @@ class ImageData(object):
         if self.word_nz >= 50:
             self.word = bool(True)
         return self.word
+
+    def __is_valid_white(self, x1, x2, y1, y2):
+        frame = self.image
+        
+        white = bool(False)
+        x1mod = x1 - 4
+        x2mod = x2 + 4
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        ret, gray = cv2.threshold(gray, 225, 255, cv2.THRESH_BINARY)
+        read_result = ImageData.__read_pixel(gray, x1mod, x2mod, y1, y2)
+        if read_result:
+            white = bool(True)
+        return white
+
+    def is_dialogue(self, x1, x2, y1, y2):
+        self.dialogue = bool(False)
+        self.dialogue = ImageData.__is_valid_color(self, x1, x2, y1, y2) and ImageData.__is_valid_white(self, x1, x2, y1, y2)
+        return self.dialogue
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条

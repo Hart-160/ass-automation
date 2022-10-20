@@ -152,10 +152,16 @@ class ASS_Automation:
             QMessageBox.information(self.ui, '任务完成', '字幕文件已生成！<br> 文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
             self.ui.back_main.setDisabled(False)
             self.ui.generate.setDisabled(False)
+            self.ui.choose_video.setDisabled(False)
+            self.ui.choose_sce.setDisabled(False)
+            self.ui.choose_template.setDisabled(False)
         else:
             QMessageBox.critical(self.ui, '发生错误', '请检查报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
             self.ui.back_main.setDisabled(False)
             self.ui.generate.setDisabled(False)
+            self.ui.choose_video.setDisabled(False)
+            self.ui.choose_sce.setDisabled(False)
+            self.ui.choose_template.setDisabled(False)
 
     def start_ass(self):
         video = self.ui.video_route.text()
@@ -170,6 +176,9 @@ class ASS_Automation:
             self.ui.output_window.clear()
             self.ui.back_main.setDisabled(True)
             self.ui.generate.setDisabled(True)
+            self.ui.choose_video.setDisabled(True)
+            self.ui.choose_sce.setDisabled(True)
+            self.ui.choose_template.setDisabled(True)
             def run(): 
                 #必须是另起一个函数包装好自己需要的函数，然后开启thread
                 #函数内不能包含跟self.ui相关的内容，会出现跨线程的bug

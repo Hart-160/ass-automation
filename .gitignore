@@ -27,11 +27,15 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-settings.txt
+# 这个project用到的ignore
 *.ico
 *.bat
 test.py
+test2.py
 tracktest.py
+*.ass
+*reference.txt
+archive tests/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

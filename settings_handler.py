@@ -45,6 +45,8 @@ class AutoRead(object):
 class Settings(object):
     SAMPLE_ASS_PATH = '[Sample ASS Path]'
     DEFAULT_REFERENCE_PATH = '[Default Reference Path]'
+    DEFAULT_LOWER_RANGE = '[Default Lower Range]'
+    DEFAULT_UPPER_RANGE = '[Default Upper Range]'
     OPEN_BOX_OFFSET = '[Open Box Offset]'
     NORMAL_CLOSE_OFFSET = '[Normal Close Offset]'
     BLACK_FADEIN_OFFSET = '[Black Fade-in Offset]'
@@ -61,6 +63,13 @@ class Settings(object):
                     return res
                 else:
                     return res
+
+    def hsv_range_splitter(line):
+        li = line.split()
+        h = li[0]
+        s = li[1]
+        v = li[2]
+        return int(h), int(s), int(v)
 
 class Reference(object):
     SCREEN_TEXT = '[SCREEN TEXT]'
