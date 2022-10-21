@@ -7,10 +7,10 @@ import os
 class AutoRead(object):
     def auto_settings(param, width, height) -> str:
         if param == '[Sample ASS Path]':
-            res = AutoRead.get_preferred_ass(width, height)
+            res = AutoRead.__get_preferred_ass(width, height)
             return res
         if param == '[Default Reference Path]':
-            res = AutoRead.get_preferred_ref(width, height)
+            res = AutoRead.__get_preferred_ref(width, height)
             return res
 
     def __split_res(name):
@@ -19,7 +19,8 @@ class AutoRead(object):
         wid, hei = name.split('x')
         return int(wid), int(hei)
 
-    def get_preferred_ref(width, height) -> str:
+    def __get_preferred_ref(width, height) -> str:
+        #在程序目录文件寻找和视频分辨率匹配的reference.txt
         refs = []
         li = os.listdir(os.getcwd())
         for l in li:
@@ -31,7 +32,8 @@ class AutoRead(object):
             if int(r_width) == width and int(r_height) == height:
                 return r
 
-    def get_preferred_ass(width, height):
+    def __get_preferred_ass(width, height):
+        #在程序目录文件寻找和视频分辨率匹配的untitled.ass
         refs = []
         li = os.listdir(os.getcwd())
         for l in li:
@@ -52,6 +54,7 @@ class Settings(object):
     BLACK_FADEIN_OFFSET = '[Black Fade-in Offset]'
 
     def settings_reader(parameter, width = None, height = None) ->str:
+        #根据给定参数寻找对应的设置
         with open('settings.txt', 'r', encoding='utf-8') as f:
             li = f.readlines()
 
@@ -65,6 +68,7 @@ class Settings(object):
                     return res
 
     def hsv_range_splitter(line):
+        #将hsv范围的字符串分割为整数元组
         li = line.split()
         h = li[0]
         s = li[1]
@@ -79,6 +83,7 @@ class Reference(object):
     TEXT_BORDER_MX = '[TEXT BORDER MX]'
 
     def reference_reader(parameter, width = None, height = None) ->str:
+        #根据给定参数寻找对应的设置
         route = Settings.settings_reader(Settings.DEFAULT_REFERENCE_PATH, width, height)
         with open(route, 'r', encoding='utf-8') as f:
             li = f.readlines()
@@ -89,12 +94,14 @@ class Reference(object):
                 return res
 
     def shader_splitter(line):
+        #将遮罩参数的字符串分割为整数元组
         li = line.split()
         x1 = li[0]
         x2 = li[1]
         return int(x1), int(x2)
 
     def box_splitter(line):
+        #将文本范围的字符串分割为整数元组
         li = line.split()
         x1 = li[0]
         y1 = li[1]

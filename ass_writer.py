@@ -145,14 +145,17 @@ class AssBuilder(QObject):
         else:
             t1 = time.time()
             ab.text_output.emit('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
+            #获取sce分析列表
             ev_sections = DialogueSections.sce_handler(sce)
             if template != None:
                 try:
+                    #模板选项不为空时，sce分析列表内的文字将被替换为翻译好的中文
                     ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
                 except IndexError:
                     ab.text_output.emit('请检查模板文件中有无多余换行！')
                     ab.send_status.emit(False)
                     return
+            #获取视频分析列表
             im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
 
             dialogue_list = []
@@ -165,6 +168,7 @@ class AssBuilder(QObject):
             ass_shader = []
             ass_alert = []
 
+            #将sce分析列表内的项目分类
             for d in ev_sections:
                 if d['EventType'] == 'Dialogue':
                     dialogue_list.append(d)
@@ -175,6 +179,7 @@ class AssBuilder(QObject):
                 if d['EventType'] == 'Jitter':
                     jitter_list.append(d)
 
+            #为有颜色变化的对话框消失做标记，分类到专门的黑\白屏列表中
             if change_windows != []:
                 for ch in change_windows:
                     if 'Color' in ch:
@@ -183,36 +188,41 @@ class AssBuilder(QObject):
             for di, im in zip(dialogue_list, im_sections):
                 if 'CloseWindow' in im:
                     open_offset = 0
-                    if 'OpenWindow' in im:
-                        naming = 'OpenClose'
-                        open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
+                    #if 'OpenWindow' in im:
+                    #    naming = 'OpenClose'
+                    #    open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
 
                     if change_windows != [] and im['Index'] in colorfade_li:
+                        #黑屏
                         naming = 'BlackFade'
                         extra_fad = '{\\fad(0,500)}'
                         text_fad = '{\\fad(0,500)}'
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
                     else:
+                        #普通对话框消失
                         naming = 'NormalClose'
                         extra_fad = '{\\fad(0,100)}'
                         text_fad = '{\\fad(0,100)}'
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
+                    #创建文本行和对应的遮罩行
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height) + extra_fad)
                 else:
                     open_offset = 0
                     naming = None
                     if 'OpenWindow' in im:
+                        #对话框出现
                         open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
                         naming = 'OpenWindow'
-                        
+                    #创建文本行和对应的遮罩行
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height))
-                shader = shader.build_comment()
+                shader = shader.build_comment() #转化为ass内的格式
                 ass_shader.append(shader)
-                line = line.build_dialogue()
+                line = line.build_dialogue() #转化为ass内的格式
                 ass_dialogue.append(line)
 
+            #标题行填入
             tit_count = 0
             for ti in title_list:
                 modify_index = tit_count - 1
@@ -226,11 +236,13 @@ class AssBuilder(QObject):
                 ass_dialogue.insert(ind, title)
                 tit_count += 1
 
+            #警告列表填入
             for a in alert_li:
                 alert = Caution(AssBuilder.__get_tstamp(a['Start']), AssBuilder.__get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
                 alert = alert.build_comment()
                 ass_alert.append(alert)
             
+            #复制untitled文件至视频同目录，并进行重命名
             src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH, width, height)
             route, name = os.path.split(video)
             shutil.copy(src, route)
@@ -242,6 +254,7 @@ class AssBuilder(QObject):
                 new_name = video + ' - copy' + '.ass'
                 os.rename(old_name, new_name)
 
+            #写入字幕至复制出的untitled文件
             with open(new_name, 'a+', encoding='utf-8') as a:
                 for s in ass_shader:
                     a.write(s + '\n')

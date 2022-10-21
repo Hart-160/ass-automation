@@ -22,11 +22,13 @@ class Entrance:
         self.ui.run_ass.clicked.connect(self.RunASS)
 
     def GenerateTMP(self):
+        #跳转至文本&模板生成
         self.subwin = Generate_TMP()
         self.subwin.ui.show()
         self.ui.close()
 
     def RunASS(self):
+        #跳转至轴机运行
         self.subwin = ASS_Automation()
         self.subwin.ui.show()
         self.ui.close()
@@ -42,6 +44,7 @@ class Generate_TMP:
         self.ui.back_main.clicked.connect(self.back)
 
     def select_sce(self):
+        #选择sce文件
         scePath, _  = QFileDialog.getOpenFileName(
             self.ui,             
             "选择SCE文件",
@@ -51,6 +54,7 @@ class Generate_TMP:
         self.ui.sce_route.setText(scePath)
 
     def generate(self):
+        #生成翻译模板
         sce = self.ui.sce_route.text()
         if sce == '':
             QMessageBox.critical(self.ui, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
@@ -63,6 +67,7 @@ class Generate_TMP:
             QMessageBox.information(self.ui, '任务完成', '模板已成功生成！', QMessageBox.Ok, QMessageBox.Ok)
 
     def generateText(self):
+        #生成txt文本
         sce = self.ui.sce_route.text()
         if sce == '':
             QMessageBox.critical(self.ui, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
@@ -75,6 +80,7 @@ class Generate_TMP:
             QMessageBox.information(self.ui, '任务完成', '文本已成功提取！', QMessageBox.Ok, QMessageBox.Ok)
 
     def back(self):
+        #返回entry界面
         self.subwin = Entrance()
         self.subwin.ui.show()
         self.ui.close()
@@ -103,6 +109,7 @@ class ASS_Automation:
         ab.send_status.connect(self.change_availability)
 
     def select_video(self):
+        #选择视频文件
         videoPath, _  = QFileDialog.getOpenFileName(
             self.ui,             
             "选择视频文件",
@@ -112,6 +119,7 @@ class ASS_Automation:
         self.ui.video_route.setText(videoPath)
 
     def select_sce(self):
+        #选择sce文件
         scePath, _  = QFileDialog.getOpenFileName(
             self.ui,             
             "选择SCE文件",
@@ -121,6 +129,7 @@ class ASS_Automation:
         self.ui.sce_route.setText(scePath)
     
     def select_template(self):
+        #选择翻译模板文件
         tempPath, _  = QFileDialog.getOpenFileName(
             self.ui,             
             "选择TXT模板",
@@ -130,6 +139,7 @@ class ASS_Automation:
         self.ui.template_route.setText(tempPath)
 
     def back(self):
+        #返回entry界面
         self.subwin = Entrance()
         self.subwin.ui.show()
         self.ui.close()
@@ -164,6 +174,7 @@ class ASS_Automation:
             self.ui.choose_template.setDisabled(False)
 
     def start_ass(self):
+        #运行轴机
         video = self.ui.video_route.text()
         sce = self.ui.sce_route.text()
         template = self.ui.template_route.text()

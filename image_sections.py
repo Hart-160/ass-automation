@@ -15,9 +15,7 @@ class ImageData(object):
         self.image = image
 
     def __read_pixel(frame, x1, x2, y1, y2):
-        '''
-        判断四个点是否为白色，如果四个都是，返回true，否则返回false
-        '''
+        #判断四个点是否为白色，如果四个都是，返回true，否则返回false
         yes = 0
         is_dialogue = False
         if frame[y1, x1] == 255:
@@ -33,7 +31,7 @@ class ImageData(object):
         return is_dialogue
     
     def __is_valid_color(self,x1,x2,y1,y2) -> bool:
-        #判断对话框
+        #判断对话框的颜色部分（常规状况下为紫色）
         dialogue = bool(False)
 
         h_min, s_min, v_min = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_LOWER_RANGE))
@@ -53,6 +51,7 @@ class ImageData(object):
         return dialogue
 
     def __get_wordnz(self,x1,x2,y1,y2) -> int:
+        #获取截取范围内非0像素的数量
         img = self.image[y1:y2, x1:x2]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
@@ -67,6 +66,7 @@ class ImageData(object):
         return self.word
 
     def __is_valid_white(self, x1, x2, y1, y2):
+        #判断对话框外圈的白色部分
         frame = self.image
         
         white = bool(False)
@@ -80,6 +80,7 @@ class ImageData(object):
         return white
 
     def is_dialogue(self, x1, x2, y1, y2):
+        #结合颜色判定&白色判定输出对话框判定结果
         self.dialogue = bool(False)
         self.dialogue = ImageData.__is_valid_color(self, x1, x2, y1, y2) and ImageData.__is_valid_white(self, x1, x2, y1, y2)
         return self.dialogue
@@ -133,6 +134,7 @@ class ImageSections(QObject):
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
+                            #判断文本更新
                             end = ms
                             image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
                             start = ms
@@ -140,9 +142,11 @@ class ImageSections(QObject):
                             word_count += 1
                 else:
                     if curr_frame.dialogue:
+                        #前一帧不是对话框，当前帧是对话框，判断对话框出现
                         start = ms
                         spec = {'OpenWindow':True}
                     else:
+                        #前一帧是对话框，当前帧不是对话框，判断对话框消失
                         end = ms
                         spec = ImageSections.__Merge(spec, {'CloseWindow':True})
                         image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
@@ -160,11 +164,14 @@ class ImageSections(QObject):
 
         清除时间过短的视频分段，合并连续的过段分段并从主列表清除，另添加至警告列表
         '''
+
+        #清除时长小于1秒的section
         remove_li = []
         for im in img_sections:
             if im['End'] - im['Start'] < 1000.0:
                 remove_li.append(im)
 
+        #合并多个连续的小于一秒的section
         tmp = []
         remove_subli = []
         for r in remove_li:
@@ -179,6 +186,7 @@ class ImageSections(QObject):
             tmp.append(remove_subli)
             remove_subli = []
 
+        #将合并的连续短section整合，另外添加至警告列表内
         alert = []
         count = 0
         for t in tmp:

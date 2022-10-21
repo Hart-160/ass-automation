@@ -29,9 +29,7 @@ class SCEwords:
     wait = '［待：'
     sync_start = '［@Parallel：'
     sync_end = '［@End：'
-
-    event_list = [title, sub_title, speaker]
-
+    
     start = '［'
     end = '］\n'
     end_backup = '］' # 涉及索引切片操作的时候用这个

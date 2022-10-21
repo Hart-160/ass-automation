@@ -1,4 +1,4 @@
-import generate_tmp as gt
+from generate_tmp import SCEwords
 from itertools import chain
 
 '''
@@ -6,9 +6,6 @@ from itertools import chain
 '''
 
 class Event(object):
-
-    #event_type = 'Event'
-
     def __init__(self, index) -> None:
         self.index = index
         self.event_type = 'Event'
@@ -108,7 +105,7 @@ class DialogueSections:
     def __count_nonbracket(li):
         non_bracket = 0
         for l in li:
-            if not l.startswith(gt.SCEwords.start):
+            if not l.startswith(SCEwords.start):
                 non_bracket += 1
         return non_bracket
 
@@ -126,21 +123,21 @@ class DialogueSections:
                 lees.append(subli)
                 subli = []
             else:
-                if l.startswith(gt.SCEwords.background_name):
+                if l.startswith(SCEwords.background_name):
                     continue
-                if l.startswith(gt.SCEwords.live2d_disappear):
+                if l.startswith(SCEwords.live2d_disappear):
                     continue
-                if l.startswith(gt.SCEwords.live2d_film):
+                if l.startswith(SCEwords.live2d_film):
                     continue
-                if l.startswith(gt.SCEwords.bgm_notice):
+                if l.startswith(SCEwords.bgm_notice):
                     continue
-                if l.startswith(gt.SCEwords.se_notice):
+                if l.startswith(SCEwords.se_notice):
                     continue
-                if l.startswith(gt.SCEwords.wait):
+                if l.startswith(SCEwords.wait):
                     continue
-                if l.startswith(gt.SCEwords.sync_start):
+                if l.startswith(SCEwords.sync_start):
                     continue
-                if l.startswith(gt.SCEwords.sync_end):
+                if l.startswith(SCEwords.sync_end):
                     continue
                 if l.startswith('}'):
                     continue
@@ -175,12 +172,12 @@ class DialogueSections:
             for i in range(len(block)):
                 line = block[i]
 
-                if 'タイトル' in line and line.startswith(gt.SCEwords.start):
+                if 'タイトル' in line and line.startswith(SCEwords.start):
                     #判断标题和副标题
                     slic = line.find('：')
-                    temp = line.replace(gt.SCEwords.end, '')
+                    temp = line.replace(SCEwords.end, '')
                     title_body = temp[slic + 1:]
-                    if gt.SCEwords.title in line:
+                    if SCEwords.title in line:
                         tit = Title(index, title_body)
                     else:
                         tit = Subtitle(index, title_body)
@@ -189,17 +186,17 @@ class DialogueSections:
                 elif line.startswith('\ufeff{ Main'):
                     continue
 
-                elif gt.SCEwords.close_window in line:
+                elif SCEwords.close_window in line:
                     # 判断对话框消失
-                    if gt.SCEwords.fade_in in block[i-1]:
+                    if SCEwords.fade_in in block[i-1]:
                         # 带有颜色变化的对话框消失
                         cw = CloseWindow(index - 1)
-                        temp = block[i-1].replace(gt.SCEwords.fade_in, '')
+                        temp = block[i-1].replace(SCEwords.fade_in, '')
                         color = temp[0]
                         cw.color = color
-                        if gt.SCEwords.fade_time in block[i-1]:
-                            temp1 = block[i-1].find(gt.SCEwords.fade_time)
-                            temp2 = block[i-1].find(gt.SCEwords.end_backup, temp1)
+                        if SCEwords.fade_time in block[i-1]:
+                            temp1 = block[i-1].find(SCEwords.fade_time)
+                            temp2 = block[i-1].find(SCEwords.end_backup, temp1)
                             temp = block[i-1][temp1:temp2]
                             fade = temp.split('：')[1]
                             cw.fade = fade
@@ -210,19 +207,19 @@ class DialogueSections:
                         continue
                     event_list.append(cw.get_dict())
 
-                elif gt.SCEwords.open_window in line:
+                elif SCEwords.open_window in line:
                     # 判断对话框弹出
                     ow = OpenWindow(index)
                     event_list.append(ow.get_dict())
 
-                elif gt.SCEwords.jitter_sign in line:
+                elif SCEwords.jitter_sign in line:
                     # 判断对话框抖动
-                    if line.startswith(gt.SCEwords.jitter_sign):
-                        if gt.SCEwords.speaker in lis[i+1]:
+                    if line.startswith(SCEwords.jitter_sign):
+                        if SCEwords.speaker in lis[i+1]:
                             jit = Jitter(index)
-                            if gt.SCEwords.time_identifier in line:
-                                temp1 = line.find(gt.SCEwords.time_identifier)
-                                temp2 = line.find(gt.SCEwords.end_backup, temp1)
+                            if SCEwords.time_identifier in line:
+                                temp1 = line.find(SCEwords.time_identifier)
+                                temp2 = line.find(SCEwords.end_backup, temp1)
                                 temp = line[temp1:temp2]
                                 time = temp.split('：')[1]
                                 if '、' in line:
@@ -231,9 +228,9 @@ class DialogueSections:
                             event_list.append(jit.get_dict())
                         else:
                             jit = Jitter(index - 1)
-                            if gt.SCEwords.time_identifier in line:
-                                temp1 = line.find(gt.SCEwords.time_identifier)
-                                temp2 = line.find(gt.SCEwords.end_backup, temp1)
+                            if SCEwords.time_identifier in line:
+                                temp1 = line.find(SCEwords.time_identifier)
+                                temp2 = line.find(SCEwords.end_backup, temp1)
                                 temp = line[temp1:temp2]
                                 time = temp.split('：')[1]
                                 if '、' in line:
@@ -242,9 +239,9 @@ class DialogueSections:
                             event_list.append(jit.get_dict())
                     else:
                         jit = Jitter(index - 1)
-                        if gt.SCEwords.time_identifier in line:
-                            temp1 = line.find(gt.SCEwords.time_identifier)
-                            temp2 = line.find(gt.SCEwords.end_backup, temp1)
+                        if SCEwords.time_identifier in line:
+                            temp1 = line.find(SCEwords.time_identifier)
+                            temp2 = line.find(SCEwords.end_backup, temp1)
                             temp = line[temp1:temp2]
                             time = temp.split('：')[1]
                             if '、' in line:
@@ -252,17 +249,17 @@ class DialogueSections:
                             jit.time = float(time)
                         event_list.append(jit.get_dict())
 
-                elif line.startswith(gt.SCEwords.speaker):
-                    temp = line.replace(gt.SCEwords.speaker, '')
-                    talker = temp.replace(gt.SCEwords.end, '')
+                elif line.startswith(SCEwords.speaker):
+                    temp = line.replace(SCEwords.speaker, '')
+                    talker = temp.replace(SCEwords.end, '')
 
-                elif line.startswith(gt.SCEwords.chara_voice):
-                    temp = line.replace(gt.SCEwords.chara_voice, '')
-                    tker = temp.replace(gt.SCEwords.end, '')
+                elif line.startswith(SCEwords.chara_voice):
+                    temp = line.replace(SCEwords.chara_voice, '')
+                    tker = temp.replace(SCEwords.end, '')
                     if tker == talker:
                         talker = tker
 
-                elif not line.startswith(gt.SCEwords.start):
+                elif not line.startswith(SCEwords.start):
                     line = line.replace('\n', '')
                     if '＠' in line:
                         temp = DialogueSections.__clean_text(line)
