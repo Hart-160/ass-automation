@@ -154,7 +154,7 @@ class DialogueSections:
             if lee != []:
                 lis.append(lee)
 
-        i = 0
+        i = 1
         while i < len(lis):
             if DialogueSections.__count_nonbracket(lis[i]) == 0 and DialogueSections.__count_nonbracket(lis[i-1]) == 0:
                 lis[i-1] = list(chain(lis[i-1], lis[i]))

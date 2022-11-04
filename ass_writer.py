@@ -66,6 +66,15 @@ class Caution(ASS_Line):
         self.layer = 1
         self.style = 'CAUTION'
 
+def rename(path_name,new_name):
+    #应对出现重复文件的情况
+    try:
+        os.rename(path_name,new_name)
+    except Exception as e:
+        if e.args[0] ==17:
+            fname, fename = os.path.splitext(new_name)
+            rename(path_name, fname+"-1"+fename)
+
 class AssBuilder(QObject):
     text_output = Signal(str) #文字输出到GUI主线程
     send_status = Signal(bool) #告知GUI运行结果，弹出提示框，以及使界面上的两个按钮可用
@@ -161,6 +170,7 @@ class AssBuilder(QObject):
             dialogue_list = []
             title_list = []
             change_windows = []
+            change_li = []
             colorfade_li = []
             jitter_list = []
 
@@ -182,6 +192,7 @@ class AssBuilder(QObject):
             #为有颜色变化的对话框消失做标记，分类到专门的黑\白屏列表中
             if change_windows != []:
                 for ch in change_windows:
+                    change_li.append(ch['Index'])
                     if 'Color' in ch:
                         colorfade_li.append(ch['Index'])
 
@@ -195,6 +206,8 @@ class AssBuilder(QObject):
                     if change_windows != [] and im['Index'] in colorfade_li:
                         #黑屏
                         naming = 'BlackFade'
+                        if 'Fade' in change_windows[change_li.index(im['Index'])]:
+                            naming = 'BlackFade ({})'.format(change_windows[change_li.index(im['Index'])]['Fade'])
                         extra_fad = '{\\fad(0,500)}'
                         text_fad = '{\\fad(0,500)}'
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
@@ -231,7 +244,7 @@ class AssBuilder(QObject):
                     if d['Index'] == ti['Index']:
                         start = d['Start']
                         break
-                title = Title(AssBuilder.__get_tstamp(start - 1230), AssBuilder.__get_tstamp(start - 480), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
+                title = Title(AssBuilder.__get_tstamp(start - 1130), AssBuilder.__get_tstamp(start - 380), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
                 title = title.build_dialogue()
                 ass_dialogue.insert(ind, title)
                 tit_count += 1
@@ -247,12 +260,8 @@ class AssBuilder(QObject):
             route, name = os.path.split(video)
             shutil.copy(src, route)
             old_name = os.path.join(route, src)
-            try:
-                new_name = video + '.ass'
-                os.rename(old_name, new_name)
-            except FileExistsError:
-                new_name = video + ' - copy' + '.ass'
-                os.rename(old_name, new_name)
+            new_name = os.path.join(route, video + '.ass')
+            rename(old_name, new_name)
 
             #写入字幕至复制出的untitled文件
             with open(new_name, 'a+', encoding='utf-8') as a:

@@ -7,10 +7,10 @@ import os
 class AutoRead(object):
     def auto_settings(param, width, height) -> str:
         if param == '[Sample ASS Path]':
-            res = AutoRead.__get_preferred_ass(width, height)
+            res = AutoRead.get_preferred_ass(width, height)
             return res
         if param == '[Default Reference Path]':
-            res = AutoRead.__get_preferred_ref(width, height)
+            res = AutoRead.get_preferred_ref(width, height)
             return res
 
     def __split_res(name):
@@ -19,7 +19,7 @@ class AutoRead(object):
         wid, hei = name.split('x')
         return int(wid), int(hei)
 
-    def __get_preferred_ref(width, height) -> str:
+    def get_preferred_ref(width, height) -> str:
         #在程序目录文件寻找和视频分辨率匹配的reference.txt
         refs = []
         li = os.listdir(os.getcwd())
@@ -32,7 +32,7 @@ class AutoRead(object):
             if int(r_width) == width and int(r_height) == height:
                 return r
 
-    def __get_preferred_ass(width, height):
+    def get_preferred_ass(width, height):
         #在程序目录文件寻找和视频分辨率匹配的untitled.ass
         refs = []
         li = os.listdir(os.getcwd())

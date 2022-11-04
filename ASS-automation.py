@@ -33,6 +33,15 @@ class Entrance:
         self.subwin.ui.show()
         self.ui.close()
 
+def rename(path_name,new_name):
+    #应对出现重复文件的情况
+    try:
+        os.rename(path_name,new_name)
+    except Exception as e:
+        if e.args[0] ==17: #重命名
+            fname, fename = os.path.splitext(new_name)
+            rename(path_name, fname+"-1"+fename)
+
 class Generate_TMP:
 
     def __init__(self):
@@ -63,7 +72,7 @@ class Generate_TMP:
             rout, name = os.path.split(sce)
             sole_name= os.path.splitext(name)[0]
             new_name = '\\[TEMPLATE] ' + sole_name + '.txt'
-            os.rename(rout + '\\' + sole_name + '.txt', rout + new_name)
+            rename(rout + '\\' + sole_name + '.txt', rout + new_name)
             QMessageBox.information(self.ui, '任务完成', '模板已成功生成！', QMessageBox.Ok, QMessageBox.Ok)
 
     def generateText(self):
@@ -76,7 +85,7 @@ class Generate_TMP:
             rout, name = os.path.split(sce)
             sole_name= os.path.splitext(name)[0]
             new_name = '\\[TEXT] ' + sole_name + '.txt'
-            os.rename(rout + '\\' + sole_name + '.txt', rout + new_name)
+            rename(rout + '\\' + sole_name + '.txt', rout + new_name)
             QMessageBox.information(self.ui, '任务完成', '文本已成功提取！', QMessageBox.Ok, QMessageBox.Ok)
 
     def back(self):
