@@ -30,6 +30,7 @@ MANIFEST
 # 这个project用到的ignore
 *.ico
 *.bat
+*.log
 test.py
 test2.py
 tracktest.py

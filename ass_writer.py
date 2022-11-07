@@ -121,10 +121,28 @@ class AssBuilder(QObject):
 
         return effect + shelter_template
 
+    def __write_log(infos:list):
+        '''
+        传入提示列表，写入log文件内
+        '''
+        log_path = os.path.join(os.getcwd(), 'ASS-automation.log')
+        if os.path.exists(log_path):
+            with open(log_path, 'a+', encoding='utf-8') as f:
+                f.write('----------------------------------------------------------------\n')
+                for i in infos:
+                    f.write(i + '\n')
+        else:
+            with open(log_path, 'w+', encoding='utf-8') as f:
+                f.write('###D4DJ-ASS-AUTOMATION-LOG###\n')
+                f.write('----------------------------------------------------------------\n')
+                for i in infos:
+                    f.write(i + '\n')
+
     def write_ass(sce, video, template=None):
         '''
         根据视频文件和sce文件，生成字幕文件（其中翻译模板template为选择性添加）
         '''
+        log_infos = []
         cap = cv2.VideoCapture(video)
         width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
         height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -257,11 +275,13 @@ class AssBuilder(QObject):
             
             #复制untitled文件至视频同目录，并进行重命名
             src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH, width, height)
-            route, name = os.path.split(video)
+            route, vid_name = os.path.split(video)
             shutil.copy(src, route)
             old_name = os.path.join(route, src)
             new_name = os.path.join(route, video + '.ass')
             rename(old_name, new_name)
+
+            log_infos.append('TASK-VIDEO = {}'.format(vid_name))
 
             #写入字幕至复制出的untitled文件
             with open(new_name, 'a+', encoding='utf-8') as a:
@@ -278,8 +298,14 @@ class AssBuilder(QObject):
             ab.text_output.emit('运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
             if len(im_sections) != len(dialogue_list):
                 ab.text_output.emit('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
+                log_infos.append('偏移文本行数：{}'.format(abs(len(dialogue_list) - len(im_sections))))
             if jitter_list != []:
                 ab.text_output.emit('剧情内共有{}行抖动出现，请留意！'.format(len(jitter_list)))
+                log_infos.append('抖动行数：{}'.format(len(jitter_list)))
+            if log_infos != []:
+                AssBuilder.__write_log(log_infos)
+                if len(log_infos) > 1:    
+                    ab.text_output.emit('上述提示已添加至：ASS-automation.log')
             ab.send_status.emit(True)
 
 ab = AssBuilder() #为GUI信号输出创建的实例
