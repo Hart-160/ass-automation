@@ -18,6 +18,7 @@ class SCEwords:
     font_size = '［ウインドウフォントサイズ：'
     jitter_sign = '［ゆれ：ウインドウ1'
     time_identifier = '時間：'
+    amplitude_identifier = '幅：'
     live2d_appear = '［Live2Dキャラ表示：'
     
     #需要去除的标识符

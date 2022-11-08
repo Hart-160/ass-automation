@@ -84,17 +84,22 @@ class FontSizeChange(Event):
         return {'Index':self.index, 'EventType':self.event_type, 'FontSize':self.font_size}
 
 class Jitter(Event):
-    def __init__(self, index, time = None) -> None:
+    def __init__(self, index, time = None, amplitude = None) -> None:
         super().__init__(index)
         self.event_type = 'Jitter'
         self.time = time
+        self.amplitude = amplitude
 
     def get_dict(self):
         if self.time == None:
             return super().get_dict()
         else:
             self.time = float(self.time)
-            return {'Index':self.index, 'EventType':self.event_type, 'Time':self.time}
+            if self.amplitude == None:
+                return {'Index':self.index, 'EventType':self.event_type, 'Time':self.time}
+            else:
+                self.amplitude = float(self.amplitude)
+                return {'Index':self.index, 'EventType':self.event_type, 'Time':self.time, 'Amplitude':self.amplitude}
 
 class DialogueSections:
     def __clean_text(text:str) -> str:
@@ -183,10 +188,10 @@ class DialogueSections:
                         tit = Subtitle(index, title_body)
                     event_list.append(tit.get_dict())
 
-                elif line.startswith('\ufeff{ Main'):
+                if line.startswith('\ufeff{ Main'):
                     continue
 
-                elif SCEwords.close_window in line:
+                if SCEwords.close_window in line:
                     # 判断对话框消失
                     if SCEwords.fade_in in block[i-1]:
                         # 带有颜色变化的对话框消失
@@ -207,12 +212,12 @@ class DialogueSections:
                         continue
                     event_list.append(cw.get_dict())
 
-                elif SCEwords.open_window in line:
+                if SCEwords.open_window in line:
                     # 判断对话框弹出
                     ow = OpenWindow(index)
                     event_list.append(ow.get_dict())
 
-                elif SCEwords.jitter_sign in line:
+                if SCEwords.jitter_sign in line:
                     # 判断对话框抖动
                     if line.startswith(SCEwords.jitter_sign):
                         if SCEwords.speaker in lis[i+1]:
@@ -221,10 +226,13 @@ class DialogueSections:
                                 temp1 = line.find(SCEwords.time_identifier)
                                 temp2 = line.find(SCEwords.end_backup, temp1)
                                 temp = line[temp1:temp2]
-                                time = temp.split('：')[1]
-                                if '、' in line:
-                                    time = time.split('、')[0]
-                                jit.time = float(time)
+                                if temp != '':
+                                    temp = temp.split('、')
+                                    time = temp[0].split('：')[1]
+                                    jit.time = float(time)
+                                    if len(temp) > 1:
+                                        amplitude = temp[1].split('：')[1]
+                                        jit.amplitude = amplitude
                             event_list.append(jit.get_dict())
                         else:
                             jit = Jitter(index - 1)
@@ -232,10 +240,13 @@ class DialogueSections:
                                 temp1 = line.find(SCEwords.time_identifier)
                                 temp2 = line.find(SCEwords.end_backup, temp1)
                                 temp = line[temp1:temp2]
-                                time = temp.split('：')[1]
-                                if '、' in line:
-                                    time = time.split('、')[0]
-                                jit.time = float(time)
+                                if temp != '':
+                                    temp = temp.split('、')
+                                    time = temp[0].split('：')[1]
+                                    jit.time = float(time)
+                                    if len(temp) > 1:
+                                        amplitude = temp[1].split('：')[1]
+                                        jit.amplitude = amplitude
                             event_list.append(jit.get_dict())
                     else:
                         jit = Jitter(index - 1)
@@ -243,23 +254,26 @@ class DialogueSections:
                             temp1 = line.find(SCEwords.time_identifier)
                             temp2 = line.find(SCEwords.end_backup, temp1)
                             temp = line[temp1:temp2]
-                            time = temp.split('：')[1]
-                            if '、' in line:
-                                time = time.split('、')[0]
-                            jit.time = float(time)
+                            if temp != '':
+                                temp = temp.split('、')
+                                time = temp[0].split('：')[1]
+                                jit.time = float(time)
+                                if len(temp) > 1:
+                                    amplitude = temp[1].split('：')[1]
+                                    jit.amplitude = amplitude
                         event_list.append(jit.get_dict())
 
-                elif line.startswith(SCEwords.speaker):
+                if line.startswith(SCEwords.speaker):
                     temp = line.replace(SCEwords.speaker, '')
                     talker = temp.replace(SCEwords.end, '')
 
-                elif line.startswith(SCEwords.chara_voice):
+                if line.startswith(SCEwords.chara_voice):
                     temp = line.replace(SCEwords.chara_voice, '')
                     tker = temp.replace(SCEwords.end, '')
                     if tker == talker:
                         talker = tker
 
-                elif not line.startswith(SCEwords.start):
+                if not line.startswith(SCEwords.start):
                     line = line.replace('\n', '')
                     if '＠' in line:
                         temp = DialogueSections.__clean_text(line)

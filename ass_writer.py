@@ -66,15 +66,6 @@ class Caution(ASS_Line):
         self.layer = 1
         self.style = 'CAUTION'
 
-def rename(path_name,new_name):
-    #应对出现重复文件的情况
-    try:
-        os.rename(path_name,new_name)
-    except Exception as e:
-        if e.args[0] ==17:
-            fname, fename = os.path.splitext(new_name)
-            rename(path_name, fname+"-1"+fename)
-
 class AssBuilder(QObject):
     text_output = Signal(str) #文字输出到GUI主线程
     send_status = Signal(bool) #告知GUI运行结果，弹出提示框，以及使界面上的两个按钮可用
@@ -137,6 +128,17 @@ class AssBuilder(QObject):
                 f.write('----------------------------------------------------------------\n')
                 for i in infos:
                     f.write(i + '\n')
+
+    def rename(p_name,n_name):
+        #应对出现重复文件的情况
+        try:
+            os.rename(p_name,n_name)
+        except Exception as e:
+            if e.args[0] ==17:
+                fname, fename = os.path.splitext(n_name)
+                n_name = fname+"-1"+fename
+                n_name = AssBuilder.rename(p_name, n_name)
+        return n_name
 
     def write_ass(sce, video, template=None):
         '''
@@ -279,7 +281,7 @@ class AssBuilder(QObject):
             shutil.copy(src, route)
             old_name = os.path.join(route, src)
             new_name = os.path.join(route, video + '.ass')
-            rename(old_name, new_name)
+            new_name = AssBuilder.rename(old_name, new_name)
 
             log_infos.append('TASK-VIDEO = {}'.format(vid_name))
 
@@ -301,11 +303,19 @@ class AssBuilder(QObject):
                 log_infos.append('偏移文本行数：{}'.format(abs(len(dialogue_list) - len(im_sections))))
             if jitter_list != []:
                 ab.text_output.emit('剧情内共有{}行抖动出现，请留意！'.format(len(jitter_list)))
-                log_infos.append('抖动行数：{}'.format(len(jitter_list)))
+                log_infos.append('抖动行数：{}（具体位置如下）'.format(len(jitter_list)))
+                for j in jitter_list:
+                    s = ''
+                    for key, value in j.items():
+                        s += '{}: {} '.format(key, value)
+                    log_infos.append(s)
             if log_infos != []:
-                AssBuilder.__write_log(log_infos)
                 if len(log_infos) > 1:    
                     ab.text_output.emit('上述提示已添加至：ASS-automation.log')
+                else:
+                    log_infos.append('ALL-CLEAR')
+                AssBuilder.__write_log(log_infos)
+                
             ab.send_status.emit(True)
 
 ab = AssBuilder() #为GUI信号输出创建的实例
