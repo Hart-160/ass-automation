@@ -6,6 +6,7 @@ import os
 import cv2
 import shutil
 import time
+import json
 
 '''
 这个部分负责以视频分析列表和sce分析列表为基础写入字幕文件
@@ -140,7 +141,18 @@ class AssBuilder(QObject):
                 n_name = AssBuilder.rename(p_name, n_name)
         return n_name
 
-    def write_ass(sce, video, template=None):
+    def __read_temp(route):
+        #读取已有的image section
+        with open(route, 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+        return data
+
+    def __write_temp(route, li):
+        #将image section储存，便于以后使用更快捷
+        with open(route, 'w+', encoding='utf-8') as f:
+            json.dump(li, f, indent=2, ensure_ascii=False)
+
+    def write_ass(sce, video, template=None, use_temp=None):
         '''
         根据视频文件和sce文件，生成字幕文件（其中翻译模板template为选择性添加）
         '''
@@ -185,7 +197,14 @@ class AssBuilder(QObject):
                     ab.send_status.emit(False)
                     return
             #获取视频分析列表
-            im_sections, alert_li = ImageSections.jitter_cleaner(ImageSections.image_section_generator(video, width, height))
+            if use_temp:
+                im_sections, alert_li = ImageSections.jitter_cleaner(AssBuilder.__read_temp('temp\\' + os.path.split(video)[1] + '.data'))
+            else:
+                raw = ImageSections.image_section_generator(video, width, height)
+                im_sections, alert_li = ImageSections.jitter_cleaner(raw)
+                if not os.path.exists('temp'):
+                    os.makedirs('temp')
+                AssBuilder.__write_temp('temp\\' + os.path.split(video)[1] + '.data', raw)
 
             dialogue_list = []
             title_list = []

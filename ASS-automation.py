@@ -168,14 +168,14 @@ class ASS_Automation:
     def change_availability(self, yes:bool):
         #传入参数时告知主线程GUI取消两个按钮的disable状态
         if yes:
-            QMessageBox.information(self.ui, '任务完成', '字幕文件已生成！<br> 文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.information(self.ui, 'D4DJ ASS AUTOMATION', '字幕文件已生成！<br> 文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
             self.ui.back_main.setDisabled(False)
             self.ui.generate.setDisabled(False)
             self.ui.choose_video.setDisabled(False)
             self.ui.choose_sce.setDisabled(False)
             self.ui.choose_template.setDisabled(False)
         else:
-            QMessageBox.critical(self.ui, '发生错误', '请检查报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.critical(self.ui, 'D4DJ ASS AUTOMATION', '请检查报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
             self.ui.back_main.setDisabled(False)
             self.ui.generate.setDisabled(False)
             self.ui.choose_video.setDisabled(False)
@@ -191,7 +191,7 @@ class ASS_Automation:
             template = None
 
         if video=='' or sce=='':
-            QMessageBox.critical(self.ui, '发生错误', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.critical(self.ui, 'D4DJ ASS AUTOMATION', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
         else:
             self.ui.output_window.clear()
             self.ui.back_main.setDisabled(True)
@@ -199,10 +199,16 @@ class ASS_Automation:
             self.ui.choose_video.setDisabled(True)
             self.ui.choose_sce.setDisabled(True)
             self.ui.choose_template.setDisabled(True)
+
+            use_temp = False
+            if os.path.exists('temp\\' + os.path.split(video)[1] + '.data'):
+                reply = QMessageBox.question(self.ui, 'D4DJ ASS AUTOMATION', '是否使用现存视频分析数据？')
+                if reply == QMessageBox.StandardButton.Yes:
+                    use_temp = True
             def run(): 
                 #必须是另起一个函数包装好自己需要的函数，然后开启thread
                 #函数内不能包含跟self.ui相关的内容，会出现跨线程的bug
-                AssBuilder.write_ass(sce, video, template)
+                AssBuilder.write_ass(sce, video, template, use_temp)
             thread1 = Thread(target=run)
             thread1.start()
 

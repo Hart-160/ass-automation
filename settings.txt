@@ -17,4 +17,4 @@ automatic
 100
 
 [Black Fade-in Offset] ms
-420
+320
