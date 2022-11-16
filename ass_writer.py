@@ -302,7 +302,11 @@ class AssBuilder(QObject):
             new_name = os.path.join(route, video + '.ass')
             new_name = AssBuilder.rename(old_name, new_name)
 
+            pop_instruction = 1
             log_infos.append('TASK-VIDEO = {}'.format(vid_name))
+            if use_temp:
+                pop_instruction += 1
+                log_infos.append('USE-SAVED-DATA = {}'.format(os.path.split(video)[1] + '.data'))
 
             #写入字幕至复制出的untitled文件
             with open(new_name, 'a+', encoding='utf-8') as a:
@@ -329,7 +333,7 @@ class AssBuilder(QObject):
                         s += '{}: {} '.format(key, value)
                     log_infos.append(s)
             if log_infos != []:
-                if len(log_infos) > 1:    
+                if len(log_infos) > pop_instruction:    
                     ab.text_output.emit('上述提示已添加至：ASS-automation.log')
                 else:
                     log_infos.append('ALL-CLEAR')
