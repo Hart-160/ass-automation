@@ -73,7 +73,7 @@ class ImageData(object):
         x1mod = x1 - 4
         x2mod = x2 + 4
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        ret, gray = cv2.threshold(gray, 225, 255, cv2.THRESH_BINARY)
+        ret, gray = cv2.threshold(gray, 220, 255, cv2.THRESH_BINARY) #225, 255
         read_result = ImageData.__read_pixel(gray, x1mod, x2mod, y1, y2)
         if read_result:
             white = bool(True)

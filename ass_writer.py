@@ -245,11 +245,17 @@ class AssBuilder(QObject):
                     if change_windows != [] and im['Index'] in colorfade_li:
                         #黑屏
                         naming = 'BlackFade'
-                        if 'Fade' in change_windows[change_li.index(im['Index'])]:
-                            naming = 'BlackFade ({})'.format(change_windows[change_li.index(im['Index'])]['Fade'])
                         extra_fad = '{\\fad(0,500)}'
                         text_fad = '{\\fad(0,500)}'
-                        fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET))
+                        extra_cut = 0
+                        if 'Fade' in change_windows[change_li.index(im['Index'])]:
+                            base_amount = 400
+                            multiply_index = change_windows[change_li.index(im['Index'])]['Fade']
+                            naming = 'BlackFade ({})'.format(multiply_index)
+                            extra_fad = '{\\fad(0,' + str(100 + int(base_amount * multiply_index)) + ')}'
+                            text_fad = '{\\fad(0,' + str(100 + int(base_amount * multiply_index)) + ')}'
+                            extra_cut = int(base_amount - base_amount * multiply_index)
+                        fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
                     else:
                         #普通对话框消失
                         naming = 'NormalClose'

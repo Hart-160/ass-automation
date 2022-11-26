@@ -1,8 +1,8 @@
 import os
 from threading import Thread
 
+#from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import *
-from PySide2.QtUiTools import QUiLoader
 from PySide2.QtCore import *
 
 from generate_tmp import *
@@ -51,6 +51,8 @@ def rename(path_name,new_name):
 
 class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
 
+    '''def __init__(self):
+        self = QUiLoader().load('GUI Pages\\template.ui')'''
     def __init__(self) -> None:
         super(Generate_TMP, self).__init__()
         self.setupUi(self)
@@ -104,6 +106,8 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
 
 class ASS_Automation(QMainWindow, Ui_ASS_automation):
 
+    '''def __init__(self):
+        self = QUiLoader().load('GUI Pages\\run_ass.ui')'''
     def __init__(self) -> None:
         super(ASS_Automation, self).__init__()
         self.setupUi(self)
