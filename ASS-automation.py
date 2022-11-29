@@ -1,5 +1,7 @@
 import os
-from threading import Thread
+import sys
+import logging
+import threading
 
 #from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import *
@@ -17,6 +19,24 @@ from ui_run_ass import Ui_ASS_automation
 这个部分负责GUI，是实质上的主程序
 '''
 
+if not os.path.exists('temp'):
+    os.makedirs('temp')
+logging.basicConfig(filename='temp\\runtime-log.log', filemode='w', level=logging.INFO)
+logger = logging.getLogger(__name__)
+handler = logging.StreamHandler(stream=sys.stdout)
+logger.addHandler(handler)
+
+def handle_exception(exc_type, exc_value, exc_traceback):
+    #GUI部分的log输出，sys的excepthook有三个参数
+    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)) # 重点
+
+def thread_exception(exc_type):
+    #轴机主体的log输出（因为是单独开的线程）threading的excepthook只有一个参数
+    logger.error("Uncaught exception", exc_info=(exc_type))
+
+sys.excepthook = handle_exception
+threading.excepthook = thread_exception
+
 class Entrance(QMainWindow, Ui_MainWindow):
 
     '''def __init__(self):
@@ -33,12 +53,14 @@ class Entrance(QMainWindow, Ui_MainWindow):
         self.subwin = Generate_TMP()
         self.subwin.show()
         self.close()
+        logging.info('Jump to Generate Template')
 
     def RunASS(self):
         #跳转至轴机运行
         self.subwin = ASS_Automation()
         self.subwin.show()
         self.close()
+        logging.info('Jump to ASS automation')
 
 def rename(path_name,new_name):
     #应对出现重复文件的情况
@@ -71,12 +93,14 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
             "视频类型 (*.sce)"
         )
         self.sce_route.setText(scePath)
+        logging.info('[GenerateTMP] SCE file selected: {}'.format(scePath))
 
     def generateTemplate(self):
         #生成翻译模板
         sce = self.sce_route.text()
         if sce == '':
             QMessageBox.critical(self, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.warning('[GenerateTMP] SCE file not selected')
         else:
             TemplateUtils.sce_to_template(sce)
             rout, name = os.path.split(sce)
@@ -84,12 +108,14 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
             new_name = '\\[TEMPLATE] ' + sole_name + '.txt'
             rename(rout + '\\' + sole_name + '.txt', rout + new_name)
             QMessageBox.information(self, '任务完成', '模板已成功生成！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.info('[GenerateTMP] Template generated')
 
     def generateText(self):
         #生成txt文本
         sce = self.sce_route.text()
         if sce == '':
             QMessageBox.critical(self, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.warning('[GenerateTMP] SCE file not selected')
         else:
             TemplateUtils.clean_sce(sce)
             rout, name = os.path.split(sce)
@@ -97,12 +123,14 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
             new_name = '\\[TEXT] ' + sole_name + '.txt'
             rename(rout + '\\' + sole_name + '.txt', rout + new_name)
             QMessageBox.information(self, '任务完成', '文本已成功提取！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.info('[GenerateTMP] Text generated')
 
     def back(self):
         #返回entry界面
         self.subwin = Entrance()
         self.subwin.show()
         self.close()
+        logging.info('Back to entrance')
 
 class ASS_Automation(QMainWindow, Ui_ASS_automation):
 
@@ -139,6 +167,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             "视频类型 (*.mp4 *.avi *.flv)"
         )
         self.video_route.setText(videoPath)
+        logging.info('[ASSautomation] Video file selected: {}'.format(videoPath))
 
     def select_sce(self):
         #选择sce文件
@@ -149,6 +178,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             "文件类型 (*.sce)"
         )
         self.sce_route.setText(scePath)
+        logging.info('[ASSautomation] SCE file selected: {}'.format(scePath))
     
     def select_template(self):
         #选择翻译模板文件
@@ -159,12 +189,14 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             "文件类型 (*.txt)"
         )
         self.template_route.setText(tempPath)
+        logging.info('[ASSautomation] Template file selected: {}'.format(tempPath))
 
     def back(self):
         #返回entry界面
         self.subwin = Entrance()
         self.subwin.show()
         self.close()
+        logging.info('Back to entrance')
 
     def outputWritten(self, text):
         #将文字打印到textBrowser上
@@ -205,6 +237,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
 
         if video=='' or sce=='':
             QMessageBox.critical(self, 'D4DJ ASS AUTOMATION', '必须填入视频和SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.warning('[ASSautomation] SCE or Video not selected')
         else:
             self.output_window.clear()
             self.back_main.setDisabled(True)
@@ -218,11 +251,12 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
                 reply = QMessageBox.question(self, 'D4DJ ASS AUTOMATION', '是否使用现存视频分析数据？')
                 if reply == QMessageBox.StandardButton.Yes:
                     use_temp = True
+                    logging.info('[ASSautomation] Choose to use previous data')
             def run(): 
                 #必须是另起一个函数包装好自己需要的函数，然后开启thread
                 #函数内不能包含跟self相关的内容，会出现跨线程的bug
                 AssBuilder.write_ass(sce, video, template, use_temp)
-            thread1 = Thread(target=run)
+            thread1 = threading.Thread(target=run)
             thread1.start()
 
 if __name__ == '__main__':

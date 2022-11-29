@@ -4,9 +4,11 @@ import settings_handler as sh
 from PySide2.QtCore import Signal,QObject
 import os
 import cv2
+import sys
 import shutil
 import time
 import json
+import logging
 
 '''
 这个部分负责以视频分析列表和sce分析列表为基础写入字幕文件
@@ -167,6 +169,7 @@ class AssBuilder(QObject):
         if width == 0 or height == 0:
             ab.text_output.emit('请确保视频路径不包含中文字符！')
             ab.send_status.emit(False)
+            logging.critical('[ASSautomation] Not reading width & height')
             return
         ab.text_output.emit('视频帧宽度：{}'.format(width))
         ab.text_output.emit('视频帧高度：{}'.format(height))
@@ -178,33 +181,41 @@ class AssBuilder(QObject):
             if sh.AutoRead.get_preferred_ref(height, width) != None:
                 ab.text_output.emit('视频文件可能存在翻转，请将其调整为正确的方向！')
             ab.send_status.emit(False)
+            logging.critical('[ASSautomation] No reference found')
             return
         if fps < 55:
             ab.text_output.emit('本程序只支持60hz视频，请确保视频帧率符合要求！')
             ab.send_status.emit(False)
+            logging.critical('[ASSautomation] FPS not supported')
             return
         else:
             t1 = time.time()
             ab.text_output.emit('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
             #获取sce分析列表
             ev_sections = DialogueSections.sce_handler(sce)
+            logging.info('[ASSautomation] Dialogue Sections generated')
             if template != None:
                 try:
                     #模板选项不为空时，sce分析列表内的文字将被替换为翻译好的中文
                     ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
+                    logging.info('[ASSautomation] Dialogue Sections generated w/ template')
                 except IndexError:
                     ab.text_output.emit('请检查模板文件中有无多余换行！')
                     ab.send_status.emit(False)
+                    logging.critical('[ASSautomation] IndexError')
                     return
             #获取视频分析列表
             if use_temp:
                 im_sections, alert_li = ImageSections.jitter_cleaner(AssBuilder.__read_temp('temp\\' + os.path.split(video)[1] + '.data'))
+                logging.info('[ASSautomation] Image Sections generated')
             else:
                 raw = ImageSections.image_section_generator(video, width, height)
                 im_sections, alert_li = ImageSections.jitter_cleaner(raw)
+                logging.info('[ASSautomation] Image Sections generated')
                 if not os.path.exists('temp'):
                     os.makedirs('temp')
                 AssBuilder.__write_temp('temp\\' + os.path.split(video)[1] + '.data', raw)
+                logging.info('[ASSautomation] Image Sections data written')
 
             dialogue_list = []
             title_list = []
@@ -304,6 +315,7 @@ class AssBuilder(QObject):
             src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH, width, height)
             route, vid_name = os.path.split(video)
             shutil.copy(src, route)
+            logging.info('[ASSautomation] Untitled.ass copied to destination')
             old_name = os.path.join(route, src)
             new_name = os.path.join(route, video + '.ass')
             new_name = AssBuilder.rename(old_name, new_name)
@@ -322,6 +334,7 @@ class AssBuilder(QObject):
                     a.write(al + '\n')
                 for dial in ass_dialogue:
                     a.write(dial + '\n')
+            logging.info('[ASSautomation] ASS file has written')
 
             t2 = time.time()
             process_time = t2 - t1
@@ -344,6 +357,7 @@ class AssBuilder(QObject):
                 else:
                     log_infos.append('ALL-CLEAR')
                 AssBuilder.__write_log(log_infos)
+            logging.info('[ASSautomation] User log has written')
                 
             ab.send_status.emit(True)
 
