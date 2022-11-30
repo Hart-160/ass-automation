@@ -54,7 +54,7 @@ class ImageData(object):
         #获取截取范围内非0像素的数量
         img = self.image[y1:y2, x1:x2]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret, img = cv2.threshold(img, 75, 255, cv2.THRESH_BINARY_INV)
+        ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
         return np.count_nonzero(img)
 
     def is_word(self,x1,x2,y1,y2) -> bool:
@@ -102,6 +102,7 @@ class ImageSections(QObject):
         pb.setmax.emit(total_frame)
 
         image_sections = []
+        #data_li = []
         word_count = 1
 
         #border
@@ -130,7 +131,8 @@ class ImageSections(QObject):
                 curr_frame = ImageData(c_frame)
                 curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
                 curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
-                
+                #data_li.append({'Frame':f, 'IsDialogue':curr_frame.dialogue, 'IsWord':curr_frame.word})
+
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
@@ -156,7 +158,7 @@ class ImageSections(QObject):
                 break
         cap.release()
 
-        return image_sections
+        return image_sections#, data_li
 
     def jitter_cleaner(img_sections:list):
         '''
