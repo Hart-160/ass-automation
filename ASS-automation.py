@@ -53,14 +53,14 @@ class Entrance(QMainWindow, Ui_MainWindow):
         self.subwin = Generate_TMP()
         self.subwin.show()
         self.close()
-        logging.info('Jump to Generate Template')
+        logging.info('[GenerateTMP] Start')
 
     def RunASS(self):
         #跳转至轴机运行
         self.subwin = ASS_Automation()
         self.subwin.show()
         self.close()
-        logging.info('Jump to ASS automation')
+        logging.info('[ASSautomation] Start')
 
 def rename(path_name,new_name):
     #应对出现重复文件的情况
@@ -130,7 +130,7 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
         self.subwin = Entrance()
         self.subwin.show()
         self.close()
-        logging.info('Back to entrance')
+        logging.info('[GenerateTMP] Back to entrance')
 
 class ASS_Automation(QMainWindow, Ui_ASS_automation):
 
@@ -196,7 +196,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
         self.subwin = Entrance()
         self.subwin.show()
         self.close()
-        logging.info('Back to entrance')
+        logging.info('[ASSautomation] Back to entrance')
 
     def outputWritten(self, text):
         #将文字打印到textBrowser上

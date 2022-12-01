@@ -132,7 +132,7 @@ class AssBuilder(QObject):
                 for i in infos:
                     f.write(i + '\n')
 
-    def rename(p_name,n_name):
+    def __rename(p_name,n_name):
         #应对出现重复文件的情况
         try:
             os.rename(p_name,n_name)
@@ -140,7 +140,7 @@ class AssBuilder(QObject):
             if e.args[0] ==17:
                 fname, fename = os.path.splitext(n_name)
                 n_name = fname+"-1"+fename
-                n_name = AssBuilder.rename(p_name, n_name)
+                n_name = AssBuilder.__rename(p_name, n_name)
         return n_name
 
     def __read_temp(route):
@@ -310,14 +310,25 @@ class AssBuilder(QObject):
 
             #标题行填入
             tit_count = 0
-            for ti in title_list:
+            for i in range(len(title_list)):
+                ti = title_list[i]
                 modify_index = tit_count - 1
                 ind = ti['Index'] + modify_index
                 for d in im_sections:
                     if d['Index'] == ti['Index']:
                         start = d['Start']
                         break
-                title = Title(AssBuilder.__get_tstamp(start - 1130), AssBuilder.__get_tstamp(start - 380), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
+                
+                #连续标题行处理
+                extra = 0
+                cont_index = 1
+                while ti != title_list[-1] and title_list[i+cont_index]['Index'] == ti['Index']:
+                    extra += 1000
+                    cont_index += 1
+                    if i + cont_index == len(title_list):
+                        break
+
+                title = Title(AssBuilder.__get_tstamp(start - 1130 - extra), AssBuilder.__get_tstamp(start - 380 - extra), name = 'Title' , text = '{\\fad(100,100)}' + ti['Body'])
                 title = title.build_dialogue()
                 ass_dialogue.insert(ind, title)
                 tit_count += 1
@@ -335,7 +346,7 @@ class AssBuilder(QObject):
             logging.info('[ASSautomation] Untitled.ass copied to destination')
             old_name = os.path.join(route, src)
             new_name = os.path.join(route, video + '.ass')
-            new_name = AssBuilder.rename(old_name, new_name)
+            new_name = AssBuilder.__rename(old_name, new_name)
 
             pop_instruction = 1
             log_infos.append('TASK-VIDEO = {}'.format(vid_name))
