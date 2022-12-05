@@ -51,25 +51,29 @@ class TemplateUtils:
             li = original.readlines()
 
         with open(route, 'w+', encoding='utf-8') as f:
+            write_data = ''
             for i in range(len(li)):
                 line = li[i]
                 if line.startswith(SCEwords.title):
-                    f.write('Title:')
+                    write_data += 'Title:'
                 elif line.startswith(SCEwords.sub_title):
-                    f.write('\nSubtitle:')
+                    write_data += '\nSubtitle:'
                 elif line.startswith(SCEwords.speaker):
                     line = line.replace(SCEwords.speaker, '\n')
                     line = line.replace(SCEwords.end, ':')
-                    f.write(line)
+                    write_data += line
                 elif line == '\n':
                     continue
                 elif i == len(li) - 1:
                     continue
                 else:
                     if li[i+1] != '\n' and SCEwords.start not in li[i]:
-                        f.write('\\N')
+                        write_data += '\\N'
                     else:
                         continue
+            if write_data.startswith('\n'):
+                write_data = write_data.replace('\n', '', 1)
+            f.write(write_data)
                     
     def clean_sce(pth) -> str:
         '''

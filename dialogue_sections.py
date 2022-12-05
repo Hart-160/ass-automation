@@ -303,7 +303,7 @@ class DialogueSections:
             tm = tm.replace('\n', '')
             tm = tm.replace('\u2026', '...')
             tm = tm.replace('\u3000', '')
-            tm = tm.split(':')
+            tm = tm.split(':', 1)
             tmp_li.append(tm)
 
         ori_li = []

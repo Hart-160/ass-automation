@@ -11,8 +11,12 @@ class ImageData(object):
     '''
     对一帧进行对话框和文字判定
     '''
-    def __init__(self, image) -> None:
+    def __init__(self, image, lower_range, upper_range, white_threshold) -> None:
         self.image = image
+        self.gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        self.lower = lower_range
+        self.upper = upper_range
+        self.white_threshold = white_threshold
 
     def __read_pixel(frame, x1, x2, y1, y2):
         #判断四个点是否为白色，如果四个都是，返回true，否则返回false
@@ -34,14 +38,9 @@ class ImageData(object):
         #判断对话框的颜色部分（常规状况下为紫色）
         dialogue = bool(False)
 
-        h_min, s_min, v_min = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_LOWER_RANGE))
-        h_max, s_max, v_max = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_UPPER_RANGE))
-        lower = np.array([h_min, s_min, v_min])
-        upper = np.array([h_max, s_max, v_max])
-
         im = self.image
         fhsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(fhsv, lower, upper)
+        mask = cv2.inRange(fhsv, np.array(self.lower), np.array(self.upper))
         im = cv2.bitwise_and(im, im, mask=mask)
         im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
         ret, im = cv2.threshold(im, 80, 255, cv2.THRESH_BINARY)
@@ -50,30 +49,21 @@ class ImageData(object):
             dialogue = bool(True)
         return dialogue
 
-    def __get_wordnz(self,x1,x2,y1,y2) -> int:
-        #获取截取范围内非0像素的数量
-        img = self.image[y1:y2, x1:x2]
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
-        return np.count_nonzero(img)
-
     def is_word(self,x1,x2,y1,y2) -> bool:
         #判断文字
         self.word = bool(False)
-        self.word_nz = ImageData.__get_wordnz(self, x1,x2,y1,y2)
-        if self.word_nz >= 50:
+        img = self.gray[y1:y2, x1:x2]
+        ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
+        if np.count_nonzero(img) >= 50:
             self.word = bool(True)
         return self.word
 
     def __is_valid_white(self, x1, x2, y1, y2):
         #判断对话框外圈的白色部分
-        frame = self.image
-        
         white = bool(False)
         x1mod = x1 - 4
         x2mod = x2 + 4
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        ret, gray = cv2.threshold(gray, 220, 255, cv2.THRESH_BINARY) #225, 255
+        ret, gray = cv2.threshold(self.gray, int(self.white_threshold), 255, cv2.THRESH_BINARY)
         read_result = ImageData.__read_pixel(gray, x1mod, x2mod, y1, y2)
         if read_result:
             white = bool(True)
@@ -111,10 +101,15 @@ class ImageSections(QObject):
         #dialogue
         x_1,y_1,x_2,y_2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_WORD_MX, width, height))
         
+        #读取设置传入ImageData构造器
+        lower_r = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_LOWER_RANGE))
+        upper_r = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_UPPER_RANGE))
+        white_gate = sh.Settings.settings_reader(sh.Settings.DEFAULT_WHITE_THRESHOLD)
+
         success, p_frame = cap.read()
         f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         pb.update_bar.emit(f)
-        prev_frame = ImageData(p_frame)
+        prev_frame = ImageData(p_frame, lower_r, upper_r, white_gate)
         prev_frame.dialogue = prev_frame.is_dialogue(x1, x2, y1, y2)
         prev_frame.word = prev_frame.is_word(x_1, x_2, y_1, y_2)
 
@@ -128,7 +123,7 @@ class ImageSections(QObject):
                 ms = cap.get(cv2.CAP_PROP_POS_MSEC)
                 f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
                 pb.update_bar.emit(f)
-                curr_frame = ImageData(c_frame)
+                curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate)
                 curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
                 curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
                 #data_li.append({'Frame':f, 'IsDialogue':curr_frame.dialogue, 'IsWord':curr_frame.word})

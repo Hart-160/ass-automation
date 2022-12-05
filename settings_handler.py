@@ -52,6 +52,7 @@ class Settings(object):
     OPEN_BOX_OFFSET = '[Open Box Offset]'
     NORMAL_CLOSE_OFFSET = '[Normal Close Offset]'
     BLACK_FADEIN_OFFSET = '[Black Fade-in Offset]'
+    DEFAULT_WHITE_THRESHOLD = '[Default White Threshold]'
 
     def settings_reader(parameter, width = None, height = None) ->str:
         #根据给定参数寻找对应的设置

@@ -10,6 +10,9 @@ automatic
 [Default Upper Range] hsv (0-179, 0-255, 0-255)
 140 245 245
 
+[Default White Threshold] (0-255)
+220
+
 [Open Box Offset] ms
 115
 
