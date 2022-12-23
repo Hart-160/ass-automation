@@ -1,6 +1,7 @@
-import numpy as np
 import cv2
-from PySide2.QtCore import Signal,QObject
+from numpy import array, count_nonzero
+from PySide2.QtCore import QObject, Signal
+
 import settings_handler as sh
 
 '''
@@ -40,7 +41,8 @@ class ImageData(object):
 
         im = self.image
         fhsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
-        mask = cv2.inRange(fhsv, np.array(self.lower), np.array(self.upper))
+        #self.border_color = {'x1':str(fhsv[y1, x1]), 'x2':str(fhsv[y2, x1]), 'x3':str(fhsv[y1, x2]), 'x4':str(fhsv[y2, x2])}
+        mask = cv2.inRange(fhsv, array(self.lower), array(self.upper))
         im = cv2.bitwise_and(im, im, mask=mask)
         im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
         ret, im = cv2.threshold(im, 80, 255, cv2.THRESH_BINARY)
@@ -54,7 +56,7 @@ class ImageData(object):
         self.word = bool(False)
         img = self.gray[y1:y2, x1:x2]
         ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
-        if np.count_nonzero(img) >= 50:
+        if count_nonzero(img) >= 50:
             self.word = bool(True)
         return self.word
 
@@ -63,6 +65,7 @@ class ImageData(object):
         white = bool(False)
         x1mod = x1 - 4
         x2mod = x2 + 4
+        #self.border_white = {'x1':str(self.gray[y1, x1mod]), 'x2':str(self.gray[y2, x1mod]), 'x3':str(self.gray[y1, x2mod]), 'x4':str(self.gray[y2, x2mod])}
         ret, gray = cv2.threshold(self.gray, int(self.white_threshold), 255, cv2.THRESH_BINARY)
         read_result = ImageData.__read_pixel(gray, x1mod, x2mod, y1, y2)
         if read_result:
@@ -72,7 +75,9 @@ class ImageData(object):
     def is_dialogue(self, x1, x2, y1, y2):
         #结合颜色判定&白色判定输出对话框判定结果
         self.dialogue = bool(False)
-        self.dialogue = ImageData.__is_valid_color(self, x1, x2, y1, y2) and ImageData.__is_valid_white(self, x1, x2, y1, y2)
+        self.valid_color = ImageData.__is_valid_color(self, x1, x2, y1, y2)
+        self.valid_white = ImageData.__is_valid_white(self, x1, x2, y1, y2)
+        self.dialogue = self.valid_color and self.valid_white
         return self.dialogue
 
 class ImageSections(QObject):
@@ -92,8 +97,10 @@ class ImageSections(QObject):
         pb.setmax.emit(total_frame)
 
         image_sections = []
-        #data_li = []
         word_count = 1
+
+        # data_li是拿来输出更详细的视频读取数据的
+        #data_li = []
 
         #border
         x1,y1,x2,y2 = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_BORDER_MX, width, height))
@@ -126,7 +133,8 @@ class ImageSections(QObject):
                 curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate)
                 curr_frame.dialogue = curr_frame.is_dialogue(x1, x2, y1, y2)
                 curr_frame.word = curr_frame.is_word(x_1, x_2, y_1, y_2)
-                #data_li.append({'Frame':f, 'IsDialogue':curr_frame.dialogue, 'IsWord':curr_frame.word})
+                # data_li是拿来输出更详细视频读取结果的
+                #data_li.append({'Frame':f, 'MiliSecond':ms, 'IsValidColor':curr_frame.valid_color, 'IsValidWhite':curr_frame.valid_white,'IsWord':curr_frame.word, 'BorderColor':curr_frame.border_color, 'BorderWhite':curr_frame.border_white})
 
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
@@ -153,7 +161,8 @@ class ImageSections(QObject):
                 break
         cap.release()
 
-        return image_sections#, data_li
+        return image_sections
+        #return image_sections, data_li
 
     def jitter_cleaner(img_sections:list):
         '''

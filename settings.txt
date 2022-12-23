@@ -5,10 +5,10 @@ automatic
 automatic
 
 [Default Lower Range] hsv (0-179, 0-255, 0-255)
-130 70 170
+125 70 170
 
 [Default Upper Range] hsv (0-179, 0-255, 0-255)
-140 245 245
+145 245 245
 
 [Default White Threshold] (0-255)
 220
@@ -20,4 +20,4 @@ automatic
 100
 
 [Black Fade-in Offset] ms
-420
+410

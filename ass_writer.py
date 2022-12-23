@@ -1,14 +1,15 @@
-from dialogue_sections import DialogueSections
-from image_sections import ImageSections
-import settings_handler as sh
-from PySide2.QtCore import Signal,QObject
-import os
-import cv2
-import sys
-import shutil
-import time
 import json
 import logging
+import os
+import shutil
+import time
+
+import cv2
+from PySide2.QtCore import QObject, Signal
+
+import settings_handler as sh
+from dialogue_sections import DialogueSections
+from image_sections import ImageSections
 
 '''
 这个部分负责以视频分析列表和sce分析列表为基础写入字幕文件
@@ -210,12 +211,17 @@ class AssBuilder(QObject):
                 logging.info('[ASSautomation] Image Sections generated')
             else:
                 raw = ImageSections.image_section_generator(video, width, height)
+                #raw, data = ImageSections.image_section_generator(video, width, height)
                 im_sections, alert_li = ImageSections.jitter_cleaner(raw)
                 logging.info('[ASSautomation] Image Sections generated')
                 if not os.path.exists('temp'):
                     os.makedirs('temp')
                 AssBuilder.__write_temp('temp\\' + os.path.split(video)[1] + '.data', raw)
                 logging.info('[ASSautomation] Image Sections data written')
+                ''' detailed data是拿来测试用的
+                AssBuilder.__write_temp('temp\\[DETAILED] ' + os.path.split(video)[1] + '.data', data)
+                logging.info('[ASSautomation] Detailed Image Sections data written')#'''
+                
 
             dialogue_list = []
             title_list = []

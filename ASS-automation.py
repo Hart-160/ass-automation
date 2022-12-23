@@ -1,41 +1,22 @@
+import logging
 import os
 import sys
-import logging
 import threading
 
 #from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
+from PySide2.QtWidgets import (QApplication, QFileDialog, QMainWindow,
+                               QMessageBox)
 
-from generate_tmp import *
 from ass_writer import *
+from generate_tmp import *
 from image_sections import *
-
 from ui_entry import Ui_MainWindow
-from ui_template import Ui_GenerateTemplate
 from ui_run_ass import Ui_ASS_automation
+from ui_template import Ui_GenerateTemplate
 
 '''
 这个部分负责GUI，是实质上的主程序
 '''
-
-if not os.path.exists('temp'):
-    os.makedirs('temp')
-logging.basicConfig(filename='temp\\runtime-log.log', filemode='w', level=logging.INFO)
-logger = logging.getLogger(__name__)
-handler = logging.StreamHandler(stream=sys.stdout)
-logger.addHandler(handler)
-
-def handle_exception(exc_type, exc_value, exc_traceback):
-    #GUI部分的log输出，sys的excepthook有三个参数
-    logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)) # 重点
-
-def thread_exception(exc_type):
-    #轴机主体的log输出（因为是单独开的线程）threading的excepthook只有一个参数
-    logger.error("Uncaught exception", exc_info=(exc_type))
-
-sys.excepthook = handle_exception
-threading.excepthook = thread_exception
 
 class Entrance(QMainWindow, Ui_MainWindow):
 
@@ -90,7 +71,7 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
             self,             
             "选择SCE文件",
             r"c:\\",
-            "视频类型 (*.sce)"
+            "文件类型 (*.sce)"
         )
         self.sce_route.setText(scePath)
         logging.info('[GenerateTMP] SCE file selected: {}'.format(scePath))
@@ -260,6 +241,24 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             thread1.start()
 
 if __name__ == '__main__':
+    if not os.path.exists('temp'):
+        os.makedirs('temp')
+    logging.basicConfig(filename='temp\\runtime-log.log', filemode='w', level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    handler = logging.StreamHandler(stream=sys.stdout)
+    logger.addHandler(handler)
+
+    def handle_exception(exc_type, exc_value, exc_traceback):
+        #GUI部分的log输出，sys的excepthook有三个参数
+        logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)) # 重点
+
+    def thread_exception(exc_type):
+        #轴机主体的log输出（因为是单独开的线程）threading的excepthook只有一个参数
+        logger.error("Uncaught exception", exc_info=(exc_type))
+
+    sys.excepthook = handle_exception
+    threading.excepthook = thread_exception
+
     app = QApplication([])
     stats = Entrance()
     stats.show()

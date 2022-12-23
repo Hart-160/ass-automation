@@ -1,4 +1,4 @@
-import os
+import os.path
 
 '''
 这个部分负责文本提取和模板生成

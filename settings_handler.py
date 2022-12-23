@@ -1,4 +1,4 @@
-import os
+from os import listdir, getcwd
 
 '''
 这个部分负责读取设置文件供视频分析及字幕写入使用
@@ -22,7 +22,7 @@ class AutoRead(object):
     def get_preferred_ref(width, height) -> str:
         #在程序目录文件寻找和视频分辨率匹配的reference.txt
         refs = []
-        li = os.listdir(os.getcwd())
+        li = listdir(getcwd())
         for l in li:
             if '[' in l and ']reference.txt' in l:
                 refs.append(l)
@@ -35,7 +35,7 @@ class AutoRead(object):
     def get_preferred_ass(width, height):
         #在程序目录文件寻找和视频分辨率匹配的untitled.ass
         refs = []
-        li = os.listdir(os.getcwd())
+        li = listdir(getcwd())
         for l in li:
             if '[' in l and ']untitled.ass' in l:
                 refs.append(l)
