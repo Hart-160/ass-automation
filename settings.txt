@@ -5,7 +5,7 @@ automatic
 automatic
 
 [Default Lower Range] hsv (0-179, 0-255, 0-255)
-125 70 170
+125 60 170
 
 [Default Upper Range] hsv (0-179, 0-255, 0-255)
 145 245 245

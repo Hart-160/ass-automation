@@ -14,7 +14,6 @@ class ImageData(object):
     '''
     def __init__(self, image, lower_range, upper_range, white_threshold) -> None:
         self.image = image
-        self.gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         self.lower = lower_range
         self.upper = upper_range
         self.white_threshold = white_threshold
@@ -40,13 +39,14 @@ class ImageData(object):
         dialogue = bool(False)
 
         im = self.image
+        im = im[y1:y2, x1:x2]
         fhsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV)
         #self.border_color = {'x1':str(fhsv[y1, x1]), 'x2':str(fhsv[y2, x1]), 'x3':str(fhsv[y1, x2]), 'x4':str(fhsv[y2, x2])}
         mask = cv2.inRange(fhsv, array(self.lower), array(self.upper))
         im = cv2.bitwise_and(im, im, mask=mask)
         im = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
         ret, im = cv2.threshold(im, 80, 255, cv2.THRESH_BINARY)
-        read_result = ImageData.__read_pixel(im, x1, x2, y1, y2)
+        read_result = ImageData.__read_pixel(im, 0, x2-x1-1, 0, y2-y1-1)
         if read_result:
             dialogue = bool(True)
         return dialogue
@@ -54,7 +54,8 @@ class ImageData(object):
     def is_word(self,x1,x2,y1,y2) -> bool:
         #判断文字
         self.word = bool(False)
-        img = self.gray[y1:y2, x1:x2]
+        img = self.image[y1:y2, x1:x2]
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
         if count_nonzero(img) >= 50:
             self.word = bool(True)
@@ -66,8 +67,10 @@ class ImageData(object):
         x1mod = x1 - 4
         x2mod = x2 + 4
         #self.border_white = {'x1':str(self.gray[y1, x1mod]), 'x2':str(self.gray[y2, x1mod]), 'x3':str(self.gray[y1, x2mod]), 'x4':str(self.gray[y2, x2mod])}
-        ret, gray = cv2.threshold(self.gray, int(self.white_threshold), 255, cv2.THRESH_BINARY)
-        read_result = ImageData.__read_pixel(gray, x1mod, x2mod, y1, y2)
+        img = self.image[y1:y2, x1mod:x2mod]
+        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret, gray = cv2.threshold(gray, int(self.white_threshold), 255, cv2.THRESH_BINARY)
+        read_result = ImageData.__read_pixel(gray, 0, x2mod-x1mod-1, 0, y2-y1-1)
         if read_result:
             white = bool(True)
         return white
@@ -158,6 +161,8 @@ class ImageSections(QObject):
                         word_count += 1
                 prev_frame = curr_frame
             except cv2.error:
+                break
+            except TypeError:
                 break
         cap.release()
 
