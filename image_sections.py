@@ -1,5 +1,5 @@
 import cv2
-from numpy import array, count_nonzero
+from numpy import array, count_nonzero, pi
 from PySide2.QtCore import QObject, Signal
 
 import settings_handler as sh
@@ -17,7 +17,7 @@ class ImageData(object):
         self.x1w, self.y1w, self.x2w, self.y2w = word_points
         
         self.image = image
-        self.gray = self.image[self.y1w:self.y2w, self.x1b-4:self.x2b+4]
+        self.gray = self.image[self.y1w:self.y2w+20, self.x1b-4:self.x2b+4]
         self.gray = cv2.cvtColor(self.gray, cv2.COLOR_BGR2GRAY)
         self.lower = lower_range
         self.upper = upper_range
@@ -82,6 +82,16 @@ class ImageData(object):
         self.valid_white = ImageData.__is_valid_white(self)
         self.dialogue = self.valid_color and self.valid_white
         return self.dialogue
+
+    '''def is_dialogue(self):
+        self.dialogue = bool(False)
+        gray = self.gray[self.y2w-self.y1w:self.y2w-self.y1w+20, 0:self.x2b-self.x1b+7]
+        edge = cv2.Canny(gray, 100, 200)
+        #edge = cv2.Canny(self.gray, 100, 200)
+        lines = cv2.HoughLinesP(edge,1,pi/180,100,minLineLength=500,maxLineGap=10)
+        if not lines is None:
+            self.dialogue = bool(True)
+        return self.dialogue'''
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条
@@ -216,4 +226,6 @@ class ImageSections(QObject):
 pb = ImageSections() #为GUI信号输出创建的实例
 
 if __name__ == '__main__':
-    pass
+    import cProfile
+    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\test\\hii_personal1.mp4'
+    cProfile.run('ImageSections.image_section_generator(video, 1920, 1440)')

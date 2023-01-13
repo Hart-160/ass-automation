@@ -370,10 +370,11 @@ class AssBuilder(QObject):
                     a.write(dial + '\n')
             logging.info('[ASSautomation] ASS file has written')
 
-            t2 = time.time()
-            process_time = t2 - t1
-            length = total_frame / fps
-            ab.text_output.emit('运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
+            if not use_temp:
+                t2 = time.time()
+                process_time = t2 - t1
+                length = total_frame / fps
+                ab.text_output.emit('运行时间/视频时长 比例：{}'.format(round(process_time / length, 2)))
             if len(im_sections) != len(dialogue_list):
                 ab.text_output.emit('共有{}行文本产生偏移，请留意！'.format(abs(len(dialogue_list) - len(im_sections))))
                 log_infos.append('偏移文本行数：{}'.format(abs(len(dialogue_list) - len(im_sections))))
