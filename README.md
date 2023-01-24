@@ -21,8 +21,7 @@ release预计每月发行一次，具体视当月更新量决定
 - 安装依赖
 
 ```shell
-    pip install opencv-python
-    pip install PySide2
+    pip install -r requirements.txt
 ```
 
 - 使用方式
@@ -33,7 +32,7 @@ release预计每月发行一次，具体视当月更新量决定
 
 ## 使用指南
 
-源代码只有1920x1440（iPad Air3等）的预设，release的zip内另有1920x888（iPhone 12，13等），1920x1260（iPad mini6等）和2344x1080的预设
+源代码只有1920x1440（iPad Air3等）的预设，release的zip内另有1920x888（iPhone 12，13等），1920x1260（iPad mini6等）的预设
 
 - [精简版教程](https://www.bilibili.com/read/cv18462837)
 - [详细版教程](https://docs.qq.com/doc/DTENkZGloYXNQZ01Y)

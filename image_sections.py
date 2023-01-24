@@ -17,12 +17,16 @@ class ImageData(object):
         self.x1w, self.y1w, self.x2w, self.y2w = word_points
         
         self.image = image
-        self.gray = self.image[self.y1w:self.y2w+20, self.x1b-4:self.x2b+4]
+        #self.gray = self.image[self.y1w:self.y2w+20, self.x1w:self.x2w] #直线法
+        self.gray = self.image[self.y1w:self.y2w, self.x1b-4:self.x2b+4] #定位法
         self.gray = cv2.cvtColor(self.gray, cv2.COLOR_BGR2GRAY)
         self.lower = lower_range
         self.upper = upper_range
         self.white_threshold = white_threshold
+        self.word = bool(False)
+        self.dialogue = bool(False)
 
+    #'''
     def __read_pixel(frame, x1, x2, y1, y2):
         #判断四个点是否为白色，如果四个都是，返回true，否则返回false
         yes = 0
@@ -56,15 +60,6 @@ class ImageData(object):
             dialogue = bool(True)
         return dialogue
 
-    def is_word(self) -> bool:
-        #判断文字
-        self.word = bool(False)
-        img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3]
-        ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
-        if count_nonzero(img) >= 50:
-            self.word = bool(True)
-        return self.word
-
     def __is_valid_white(self):
         #判断对话框外圈的白色部分
         white = bool(False)
@@ -76,22 +71,42 @@ class ImageData(object):
         return white
 
     def is_dialogue(self):
+        #定位点颜色识别法
         #结合颜色判定&白色判定输出对话框判定结果
-        self.dialogue = bool(False)
+        
         self.valid_color = ImageData.__is_valid_color(self)
         self.valid_white = ImageData.__is_valid_white(self)
         self.dialogue = self.valid_color and self.valid_white
         return self.dialogue
+    #'''
 
-    '''def is_dialogue(self):
+    '''
+    def is_dialogue(self):
+        #直线识别法
+        #裁切对话框，根据霍夫直线检测的结果输出对话框判定结果
         self.dialogue = bool(False)
-        gray = self.gray[self.y2w-self.y1w:self.y2w-self.y1w+20, 0:self.x2b-self.x1b+7]
-        edge = cv2.Canny(gray, 100, 200)
-        #edge = cv2.Canny(self.gray, 100, 200)
-        lines = cv2.HoughLinesP(edge,1,pi/180,100,minLineLength=500,maxLineGap=10)
+        #gray = self.gray[self.y2w-self.y1w:self.y2w-self.y1w+20, 0:self.x2b-self.x1b+7]
+        gray = self.gray[self.y2w-self.y1w:self.y2w-self.y1w+20, 0:self.x2w-self.x1w]
+        edge = cv2.Canny(gray, threshold1=250, threshold2=500, apertureSize=3)
+        lines = cv2.HoughLinesP(edge,1,pi/180,threshold=300,minLineLength=500,maxLineGap=10)
+        #line_count是data_li用的测试代码
+        self.line_count = 0
         if not lines is None:
             self.dialogue = bool(True)
-        return self.dialogue'''
+            #self.line_count = len(lines)
+        return self.dialogue
+    #'''
+
+    def is_word(self) -> bool:
+        #判断文字
+        '''if not self.dialogue:
+            return self.word'''
+        img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
+        #img = self.gray[0:self.y2w-self.y1w-1, 0:self.x2w-self.x1w] #直线法
+        ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
+        if count_nonzero(img) >= 50:
+            self.word = bool(True)
+        return self.word
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条
@@ -148,13 +163,13 @@ class ImageSections(QObject):
                 curr_frame.word = curr_frame.is_word()
                 # data_li是拿来输出更详细视频读取结果的
                 #data_li.append({'Frame':f, 'MiliSecond':ms, 'IsValidColor':curr_frame.valid_color, 'IsValidWhite':curr_frame.valid_white,'IsWord':curr_frame.word, 'BorderColor':curr_frame.border_color, 'BorderWhite':curr_frame.border_white})
-
+                #data_li.append({'Frame':f, 'MiliSecond':ms, 'IsDialogue':curr_frame.dialogue,'IsWord':curr_frame.word, 'LineCount':curr_frame.line_count})
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             #判断文本更新
                             end = ms
-                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
                             start = ms
                             spec = {}
                             word_count += 1
@@ -167,7 +182,8 @@ class ImageSections(QObject):
                         #前一帧是对话框，当前帧不是对话框，判断对话框消失
                         end = ms
                         spec = ImageSections.__Merge(spec, {'CloseWindow':True})
-                        image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end}, spec))
+                        #Length项为测试代码，正式打包时不需要
+                        image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
                         word_count += 1
                 prev_frame = curr_frame
             except cv2.error:
@@ -226,6 +242,4 @@ class ImageSections(QObject):
 pb = ImageSections() #为GUI信号输出创建的实例
 
 if __name__ == '__main__':
-    import cProfile
-    video = 'C:\\Users\\roma\\Documents\\D4DJ Unpack\\test\\hii_personal1.mp4'
-    cProfile.run('ImageSections.image_section_generator(video, 1920, 1440)')
+    pass
