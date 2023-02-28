@@ -82,6 +82,7 @@ class Reference(object):
     SCREEN_VARIABLE = '[SCREEN VARIABLE]'
     TEXT_WORD_MX = '[TEXT WORD MX]'
     TEXT_BORDER_MX = '[TEXT BORDER MX]'
+    TEMPLATE_DETECT_CUT_FACTOR = '[TEMPLATE DETECT CUT FACTOR]'
 
     def reference_reader(parameter, width = None, height = None) ->str:
         #根据给定参数寻找对应的设置

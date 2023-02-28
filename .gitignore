@@ -40,6 +40,7 @@ archive tests/
 temp/
 *.data
 *.exe
+[1920x1440]color-test.ass
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
