@@ -53,11 +53,23 @@ class Settings(object):
     NORMAL_CLOSE_OFFSET = '[Normal Close Offset]'
     BLACK_FADEIN_OFFSET = '[Black Fade-in Offset]'
     DEFAULT_WHITE_THRESHOLD = '[Default White Threshold]'
+    NAME_STYLES = '[Name Styles]'
 
     def settings_reader(parameter, width = None, height = None) ->str:
         #根据给定参数寻找对应的设置
         with open('settings.txt', 'r', encoding='utf-8') as f:
             li = f.readlines()
+
+        if parameter == Settings.NAME_STYLES:
+            res = {}
+            for i in range(len(li)):
+                if li[i-1].startswith(Settings.NAME_STYLES):
+                    while not li[i].startswith('/'):
+                        li[i] = li[i].strip('\n')
+                        chara_name, style_name = li[i].split(' ')
+                        res[chara_name] = style_name
+                        i+=1
+            return res
 
         for i in range(len(li)):
             if parameter in li[i]:

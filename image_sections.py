@@ -17,13 +17,10 @@ class ImageData(object):
                  word_points:tuple, border_points:tuple) -> None:
         self.x1b, self.y1b, self.x2b, self.y2b = border_points
         self.x1w, self.y1w, self.x2w, self.y2w = word_points
-        
-        self.width = width
-        self.height = height
-        
+
         self.image = image
-        self.gray = self.image[int(self.height*float(sh.Reference.reference_reader(sh.Reference.TEMPLATE_DETECT_CUT_FACTOR, width, height))):self.height, 0:self.width]
-        # self.gray = self.image[self.y1w:self.y2w, self.x1b-4:self.x2b+4] #定位法
+        #self.gray = self.image[int(height*float(sh.Reference.reference_reader(sh.Reference.TEMPLATE_DETECT_CUT_FACTOR, width, height))):height, 0:width] #模板匹配法
+        self.gray = self.image[self.y1w:self.y2w, self.x1b-4:self.x2b+4] #定位法
         self.gray = cv2.cvtColor(self.gray, cv2.COLOR_BGR2GRAY)
         self.lower = lower_range
         self.upper = upper_range
@@ -31,7 +28,7 @@ class ImageData(object):
         self.word = bool(False)
         self.dialogue = bool(False)
 
-    '''
+    #'''
     def __read_pixel(frame, x1, x2, y1, y2):
         #判断四个点是否为白色，如果四个都是，返回true，否则返回false
         yes = 0
@@ -85,7 +82,7 @@ class ImageData(object):
         return self.dialogue
     #'''
 
-    #'''
+    '''
     def set_canny(self, canny):
         self.tmp_canny = canny
     
@@ -105,9 +102,9 @@ class ImageData(object):
         #判断文字
         '''if not self.dialogue:
             return self.word'''
-        #img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
-        img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #直线法
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
+        # img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #模板匹配法
+        # img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
         ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
         if count_nonzero(img) >= 50:
             self.word = bool(True)
@@ -116,7 +113,7 @@ class ImageData(object):
     def get_detailed_data(self, f, ms):
         #获得详细数据
         #return {'Frame':f, 'MiliSecond':ms, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
-        return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word} #直线法
+        return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word} #模板匹配法
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条
@@ -129,7 +126,7 @@ class ImageSections(QObject):
     def get_template_canny(template_route):
         tmp = cv2.imread(template_route)
         tmp = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
-        tmp_canny = cv2.Canny(tmp, 50, 150)
+        tmp_canny = cv2.Canny(tmp, 150,300)
         return tmp_canny
 
     def image_section_generator(vid, width, height):
@@ -157,13 +154,13 @@ class ImageSections(QObject):
         upper_r = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_UPPER_RANGE))
         white_gate = sh.Settings.settings_reader(sh.Settings.DEFAULT_WHITE_THRESHOLD)
 
-        tmp_canny = ImageSections.get_template_canny('template.png')
+        #tmp_canny = ImageSections.get_template_canny('template.png') #模板匹配法
 
         success, p_frame = cap.read()
         f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         pb.update_bar.emit(f)
         prev_frame = ImageData(p_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points)
-        prev_frame.set_canny(tmp_canny)
+        #prev_frame.set_canny(tmp_canny) #模板匹配法
         prev_frame.dialogue = prev_frame.is_dialogue()
         prev_frame.word = prev_frame.is_word()
 
@@ -178,7 +175,7 @@ class ImageSections(QObject):
                 f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
                 pb.update_bar.emit(f)
                 curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points)
-                curr_frame.set_canny(tmp_canny)
+                #curr_frame.set_canny(tmp_canny) #模板匹配法
                 curr_frame.dialogue = curr_frame.is_dialogue()
                 curr_frame.word = curr_frame.is_word()
                 # data_li是拿来输出更详细视频读取结果的

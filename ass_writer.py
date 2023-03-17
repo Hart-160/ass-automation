@@ -47,10 +47,16 @@ class ASS_Line(object):
         return 'Comment: ' + s.join(li)
 
 class Dialogue(ASS_Line):
+    
+    chara_dict = sh.Settings.settings_reader(sh.Settings.NAME_STYLES)
+    
     def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
         super().__init__(start, end, name, text)
         self.layer = 1
-        self.style = 'D4DJ 剧情'
+        if name in Dialogue.chara_dict:
+            self.style = Dialogue.chara_dict[name]
+        else:
+            self.style = 'D4DJ 剧情'
 
 class Title(ASS_Line):
     def __init__(self, start: str, end: str, name: str = None, text: str = None) -> None:
