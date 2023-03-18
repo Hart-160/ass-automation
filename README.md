@@ -7,12 +7,14 @@
 
 ### Release版
 
-在release界面下载zip，点击ASS-automation.exe运行
-release预计每月发行一次，具体视当月更新量决定
+在release界面下载zip，解压后点击ASS-automation.exe运行
+
+**请勿将运行轴机所需的视频、剧情文件等放在轴机文件夹目录下！！**
 
 ### 开发版
 
-- 下载克隆本仓库
+- 需求：Python 3.8+
+- 克隆本仓库
 
 ```shell
     git clone https://github.com/Hart-160/ass-automation.git
@@ -32,7 +34,15 @@ release预计每月发行一次，具体视当月更新量决定
 
 ## 使用指南
 
-源代码只有1920x1440（iPad Air3等）的预设，release的zip内另有1920x888（iPhone 12，13等），1920x1260（iPad mini6等）的预设
+若未提供所需分辨率的预设，请通过下方联系方式联系作者制作对应预设
+
+注：苹果设备在同分辨率的情况下，有touch bar和无touch bar无法使用同预设
+
+|   预设对应情况   |  分辨率  |          适用设备          |
+| :--------------: | :-------: | :------------------------: |
+| 源码&release包含 | 1920x1440 | iPad Air3等无touch bar设备 |
+|   release包含   | 1920x888 |      iPhone 12，13等      |
+|   release包含   | 1920x1260 |        iPad mini6等        |
 
 - [精简版教程](https://www.bilibili.com/read/cv18462837)
 - [详细版教程](https://docs.qq.com/doc/DTENkZGloYXNQZ01Y)
@@ -46,9 +56,5 @@ release预计每月发行一次，具体视当月更新量决定
 ## WIP
 
 - [ ] 整行偏移的应对
-
-- [ ] 更好的读取对话边框颜色方法（基于颜色平均值）
-
 - [ ] 视频版轴机校对教程
-
 - [ ] *更多需求请提出**issue***

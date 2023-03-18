@@ -1,4 +1,5 @@
 import logging
+import json
 import os
 import sys
 import threading
@@ -17,6 +18,31 @@ from ui_template import Ui_GenerateTemplate
 '''
 这个部分负责GUI，是实质上的主程序
 '''
+
+class Configs:
+    #记录配置用
+    PREFERRED_SCE_PATH = 'PreferredSCEPath'
+    PREFERRED_ASS_PATH = 'PreferredASSPath'
+    
+    def config_creator():
+        data = {
+            Configs.PREFERRED_SCE_PATH:'',
+            Configs.PREFERRED_ASS_PATH:''
+        }
+        with open('temp\\config.json', 'w+', encoding='utf-8') as f:
+            json.dump(data, f, indent=4)
+
+    def config_reader(parameter):
+        with open('temp\\config.json', 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+        return data[parameter]
+
+    def config_editor(parameter, input):
+        with open('temp\\config.json', 'r+', encoding='utf-8') as f:
+            data = json.load(f)
+        data[parameter] = input
+        with open('temp\\config.json', 'w+', encoding='utf-8') as f:
+             json.dump(data, f, indent=4)
 
 class Entrance(QMainWindow, Ui_MainWindow):
 
@@ -67,13 +93,19 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
 
     def select_sce(self):
         #选择sce文件
+        config_sce_path = Configs.config_reader(Configs.PREFERRED_SCE_PATH)
+        if config_sce_path == '':
+            config_sce_path = r"C:\\"
         scePath, _  = QFileDialog.getOpenFileName(
             self,             
             "选择SCE文件",
-            r"c:\\",
+            config_sce_path,
             "文件类型 (*.sce)"
         )
+        if scePath == '':
+            return
         self.sce_route.setText(scePath)
+        Configs.config_editor(Configs.PREFERRED_SCE_PATH, os.path.split(scePath)[0])
         logging.info('[GenerateTMP] SCE file selected: {}'.format(scePath))
 
     def generateTemplate(self):
@@ -141,35 +173,53 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
 
     def select_video(self):
         #选择视频文件
+        config_ass_path = Configs.config_reader(Configs.PREFERRED_ASS_PATH)
+        if config_ass_path == '':
+            config_ass_path = r"C:\\"
         videoPath, _  = QFileDialog.getOpenFileName(
             self,             
             "选择视频文件",
-            r"c:\\",
+            config_ass_path,
             "视频类型 (*.mp4 *.avi *.flv)"
         )
+        if videoPath == '':
+            return
         self.video_route.setText(videoPath)
+        Configs.config_editor(Configs.PREFERRED_ASS_PATH, os.path.split(videoPath)[0])
         logging.info('[ASSautomation] Video file selected: {}'.format(videoPath))
 
     def select_sce(self):
         #选择sce文件
+        config_ass_path = Configs.config_reader(Configs.PREFERRED_ASS_PATH)
+        if config_ass_path == '':
+            config_ass_path = r"C:\\"
         scePath, _  = QFileDialog.getOpenFileName(
             self,             
             "选择SCE文件",
-            r"c:\\",
+            config_ass_path,
             "文件类型 (*.sce)"
         )
+        if scePath == '':
+            return
         self.sce_route.setText(scePath)
+        Configs.config_editor(Configs.PREFERRED_ASS_PATH, os.path.split(scePath)[0])
         logging.info('[ASSautomation] SCE file selected: {}'.format(scePath))
     
     def select_template(self):
         #选择翻译模板文件
+        config_ass_path = Configs.config_reader(Configs.PREFERRED_ASS_PATH)
+        if config_ass_path == '':
+            config_ass_path = r"C:\\"
         tempPath, _  = QFileDialog.getOpenFileName(
             self,             
             "选择TXT模板",
-            r"c:\\",
+            config_ass_path,
             "文件类型 (*.txt)"
         )
+        if tempPath == '':
+            return
         self.template_route.setText(tempPath)
+        Configs.config_editor(Configs.PREFERRED_ASS_PATH, os.path.split(tempPath)[0])
         logging.info('[ASSautomation] Template file selected: {}'.format(tempPath))
 
     def back(self):
@@ -247,6 +297,9 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     handler = logging.StreamHandler(stream=sys.stdout)
     logger.addHandler(handler)
+
+    if not os.path.exists('temp\\config.json'):
+        Configs.config_creator()
 
     def handle_exception(exc_type, exc_value, exc_traceback):
         #GUI部分的log输出，sys的excepthook有三个参数
