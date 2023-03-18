@@ -232,6 +232,7 @@ class AssBuilder(QObject):
             dialogue_list = []
             title_list = []
             change_windows = []
+            open_windows = []
             change_li = []
             colorfade_li = []
             jitter_list = []
@@ -248,6 +249,8 @@ class AssBuilder(QObject):
                     title_list.append(d)
                 if d['EventType'] == 'CloseWindow':
                     change_windows.append(d)
+                if d['EventType'] == 'OpenWindow':
+                    open_windows.append(d)
                 if d['EventType'] == 'Jitter':
                     jitter_list.append(d)
 
@@ -257,7 +260,21 @@ class AssBuilder(QObject):
                     change_li.append(ch['Index'])
                     if 'Color' in ch:
                         colorfade_li.append(ch['Index'])
- 
+
+            if len(dialogue_list) == len(im_sections):
+                for o in open_windows:
+                    for ims in im_sections:
+                        if ims['Index'] == o['Index']:
+                            if o['EventType'] not in ims:
+                                ims[o['EventType']] = True
+                            break
+                for c in change_windows:
+                    for ims in im_sections:
+                        if ims['Index'] == c['Index']:
+                            if c['EventType'] not in ims:
+                                ims[c['EventType']] = True
+                            break
+
             for di, im in zip(dialogue_list, im_sections):
                 if 'CloseWindow' in im:
                     open_offset = 0

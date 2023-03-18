@@ -141,7 +141,7 @@ class ImageSections(QObject):
         word_count = 1
 
         # data_li是拿来输出更详细的视频读取数据的
-        data_li = []
+        #data_li = []
 
         #border
         border_points = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_BORDER_MX, width, height))
@@ -182,7 +182,7 @@ class ImageSections(QObject):
                 curr_frame.dialogue = curr_frame.is_dialogue()
                 curr_frame.word = curr_frame.is_word()
                 # data_li是拿来输出更详细视频读取结果的
-                data_li.append(curr_frame.get_detailed_data(f, ms))
+                #data_li.append(curr_frame.get_detailed_data(f, ms))
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
@@ -213,8 +213,8 @@ class ImageSections(QObject):
                 break
         cap.release()
 
-        #return image_sections
-        return image_sections, data_li
+        return image_sections
+        #return image_sections, data_li
 
     def jitter_cleaner(img_sections:list):
         '''
