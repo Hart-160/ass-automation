@@ -14,13 +14,13 @@ automatic
 220
 
 [Open Box Offset] ms
-115
+175
 
 [Normal Close Offset] ms
-100
+50
 
 [Black Fade-in Offset] ms
-410
+300
 
 [Name Styles] chara-name style-name (space between names)
 りんく 愛本りんく

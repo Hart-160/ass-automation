@@ -257,7 +257,7 @@ class AssBuilder(QObject):
                     change_li.append(ch['Index'])
                     if 'Color' in ch:
                         colorfade_li.append(ch['Index'])
-
+ 
             for di, im in zip(dialogue_list, im_sections):
                 if 'CloseWindow' in im:
                     open_offset = 0
@@ -271,12 +271,15 @@ class AssBuilder(QObject):
                         text_fad = '{\\fad(0,500)}'
                         extra_cut = 0
                         if 'Fade' in change_windows[change_li.index(im['Index'])]:
-                            base_amount = 400
+                            base_fade_amount = 400
+                            base_cut_amount = 300
                             multiply_index = change_windows[change_li.index(im['Index'])]['Fade']
                             naming = 'BlackFade ({})'.format(multiply_index)
-                            extra_fad = '{\\fad(0,' + str(100 + int(base_amount * multiply_index)) + ')}'
-                            text_fad = '{\\fad(0,' + str(100 + int(base_amount * multiply_index)) + ')}'
-                            extra_cut = int(base_amount - base_amount * multiply_index)
+                            extra_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
+                            text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
+                            extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
+                            if multiply_index == 0.25:
+                                extra_cut -= 50
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
                     else:
                         #普通对话框消失
@@ -296,12 +299,15 @@ class AssBuilder(QObject):
                     text_fad = '{\\fad(0,500)}'
                     extra_cut = 0
                     if 'Fade' in change_windows[change_li.index(im['Index'])]:
-                        base_amount = 400
+                        base_fade_amount = 400
+                        base_cut_amount = 300
                         multiply_index = change_windows[change_li.index(im['Index'])]['Fade']
                         naming = 'WhiteFade ({})'.format(multiply_index)
-                        extra_fad = '{\\fad(0,' + str(100 + int(base_amount * multiply_index)) + ')}'
-                        text_fad = '{\\fad(0,' + str(100 + int(base_amount * multiply_index)) + ')}'
-                        extra_cut = int(base_amount - base_amount * multiply_index)
+                        extra_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
+                        text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
+                        extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
+                        if multiply_index == 0.25:
+                            extra_cut -= 50
                     fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height) + extra_fad)
