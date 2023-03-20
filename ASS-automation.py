@@ -1,10 +1,12 @@
-import logging
+import ctypes
 import json
+import logging
 import os
 import sys
 import threading
 
 #from PySide2.QtUiTools import QUiLoader
+from PySide2.QtGui import QIcon
 from PySide2.QtWidgets import (QApplication, QFileDialog, QMainWindow,
                                QMessageBox)
 
@@ -52,6 +54,7 @@ class Entrance(QMainWindow, Ui_MainWindow):
         super(Entrance, self).__init__()
         self.setupUi(self)
 
+        self.setWindowIcon(QIcon("dj_icon.ico"))
         self.generate_template.clicked.connect(self.GenerateTMP)
         self.run_ass.clicked.connect(self.RunASS)
 
@@ -85,6 +88,7 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
     def __init__(self) -> None:
         super(Generate_TMP, self).__init__()
         self.setupUi(self)
+        self.setWindowIcon(QIcon("dj_icon.ico"))
         #buttons below
         self.choose_sce.clicked.connect(self.select_sce)
         self.generate.clicked.connect(self.generateTemplate)
@@ -152,6 +156,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
     def __init__(self) -> None:
         super(ASS_Automation, self).__init__()
         self.setupUi(self)
+        self.setWindowIcon(QIcon("dj_icon.ico"))
 
         #buttons below
         self.choose_video.clicked.connect(self.select_video)
@@ -291,6 +296,8 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             thread1.start()
 
 if __name__ == '__main__':
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+    
     if not os.path.exists('temp'):
         os.makedirs('temp')
     logging.basicConfig(filename='temp\\runtime-log.log', filemode='w', level=logging.INFO)
