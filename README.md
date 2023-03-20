@@ -36,17 +36,24 @@
     python ASS-automation.py
 ```
 
+注：代码内的识别法切换于ass_writer.py内
+
+```python
+video_process_thread = ImageSections.COLOR_DETECT #定位识别法，对应快速版
+vidoe_process_thread = ImageSections.TEMPLATE_MATCH #模板匹配法，对应稳定版
+```
+
 ## 使用指南
 
 若未提供所需分辨率的预设，请通过下方联系方式联系作者制作对应预设
 
 注：苹果设备在同分辨率的情况下，有touch bar和无touch bar无法使用同预设
 
-|   预设对应情况   |  分辨率  |          适用设备          |
-| :--------------: | :-------: | :------------------------: |
-| 源码&release包含 | 1920x1440 | iPad Air3等无touch bar设备 |
-|   release包含   | 1920x888 |      iPhone 12，13等      |
-|   release包含   | 1920x1260 |        iPad mini6等        |
+|   预设对应情况   |  分辨率  |            适用设备            |
+| :--------------: | :-------: | :----------------------------: |
+| 源码&release包含 | 1920x1440 |   iPad Air3等无touch bar设备   |
+|   release包含   | 1920x888 | iPhone 12，13等有touch bar设备 |
+|   release包含   | 1920x1260 |  iPad mini6等有touch bar设备  |
 
 - [精简版教程](https://www.bilibili.com/read/cv18462837)
 - [详细版教程](https://docs.qq.com/doc/DTENkZGloYXNQZ01Y)
