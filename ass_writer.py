@@ -216,18 +216,23 @@ class AssBuilder(QObject):
                 im_sections, alert_li = ImageSections.jitter_cleaner(AssBuilder.__read_temp('temp\\' + os.path.split(video)[1] + '.data'))
                 logging.info('[ASSautomation] Image Sections generated from Previous Data')
             else:
-                raw = ImageSections.image_section_generator(video, width, height)
-                #raw, data = ImageSections.image_section_generator(video, width, height)
+                #detailed data是拿来测试用的
+                generate_detailed_data = False #需要时此项改为True即可
+                video_process_method = ImageSections.COLOR_DETECT #选择对话框识别方式
+                
+                if generate_detailed_data:
+                    raw, data = ImageSections.image_section_generator(video, width, height, generate_detailed_data, video_process_method)
+                else:
+                    raw = ImageSections.image_section_generator(video, width, height, generate_detailed_data, video_process_method)
                 AssBuilder.__write_temp('temp\\' + os.path.split(video)[1] + '.data', raw)
                 logging.info('[ASSautomation] RAW Image Sections data written')
                 im_sections, alert_li = ImageSections.jitter_cleaner(raw)
                 logging.info('[ASSautomation] Cleaned Image Sections generated')
                 if not os.path.exists('temp'):
                     os.makedirs('temp')
-                ''' detailed data是拿来测试用的
-                AssBuilder.__write_temp('temp\\[DETAILED] ' + os.path.split(video)[1] + '.data', data)
-                logging.info('[ASSautomation] Detailed Image Sections data written')#'''
-                
+                if generate_detailed_data:
+                    AssBuilder.__write_temp('temp\\[DETAILED] ' + os.path.split(video)[1] + '.data', data)
+                    logging.info('[ASSautomation] Detailed Image Sections data written')
 
             dialogue_list = []
             title_list = []
@@ -291,12 +296,17 @@ class AssBuilder(QObject):
                             base_fade_amount = 400
                             base_cut_amount = 300
                             multiply_index = change_windows[change_li.index(im['Index'])]['Fade']
+                            
+                            if video_process_method == ImageSections.TEMPLATE_MATCH:
+                                if multiply_index == 0.25:
+                                    extra_cut -= 50
+                            elif video_process_method == ImageSections.COLOR_DETECT:
+                                base_cut_amount = base_fade_amount
+                            
                             naming = 'BlackFade ({})'.format(multiply_index)
                             extra_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                             text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                             extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
-                            if multiply_index == 0.25:
-                                extra_cut -= 50
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
                     else:
                         #普通对话框消失
@@ -319,12 +329,17 @@ class AssBuilder(QObject):
                         base_fade_amount = 400
                         base_cut_amount = 300
                         multiply_index = change_windows[change_li.index(im['Index'])]['Fade']
+                        
+                        if video_process_method == ImageSections.TEMPLATE_MATCH:
+                            if multiply_index == 0.25:
+                                extra_cut -= 50
+                        elif video_process_method == ImageSections.COLOR_DETECT:
+                            base_cut_amount = base_fade_amount
+                        
                         naming = 'WhiteFade ({})'.format(multiply_index)
                         extra_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                         text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                         extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
-                        if multiply_index == 0.25:
-                            extra_cut -= 50
                     fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height) + extra_fad)

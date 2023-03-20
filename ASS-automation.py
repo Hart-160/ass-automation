@@ -7,6 +7,7 @@ import threading
 
 #from PySide2.QtUiTools import QUiLoader
 from PySide2.QtGui import QIcon
+from PySide2.QtCore import Qt
 from PySide2.QtWidgets import (QApplication, QFileDialog, QMainWindow,
                                QMessageBox)
 
@@ -318,6 +319,10 @@ if __name__ == '__main__':
 
     sys.excepthook = handle_exception
     threading.excepthook = thread_exception
+
+    if sys.platform.startswith('win'):
+        ctypes.windll.user32.SetProcessDPIAware()
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
     app = QApplication([])
     stats = Entrance()

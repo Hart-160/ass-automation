@@ -41,6 +41,8 @@ temp/
 *.data
 *.exe
 [1920x1440]color-test.ass
+settings_color.txt
+settings_template.txt
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

@@ -14,13 +14,16 @@ class ImageData(object):
     '''
     def __init__(self, image, lower_range, upper_range, white_threshold, 
                  width, height,
-                 word_points:tuple, border_points:tuple) -> None:
+                 word_points:tuple, border_points:tuple, read_method) -> None:
         self.x1b, self.y1b, self.x2b, self.y2b = border_points
         self.x1w, self.y1w, self.x2w, self.y2w = word_points
+        self.method = read_method
 
         self.image = image
-        self.gray = self.image[int(height*float(sh.Reference.reference_reader(sh.Reference.TEMPLATE_DETECT_CUT_FACTOR, width, height))):height, 0:width] #模板匹配法
-        #self.gray = self.image[self.y1w:self.y2w, self.x1b-4:self.x2b+4] #定位法
+        if self.method == 'ColorDetect':
+            self.gray = self.image[self.y1w:self.y2w, self.x1b-4:self.x2b+4] #定位法
+        if self.method == 'TemplateMatch':
+            self.gray = self.image[int(height*float(sh.Reference.reference_reader(sh.Reference.TEMPLATE_DETECT_CUT_FACTOR, width, height))):height, 0:width] #模板匹配法
         self.gray = cv2.cvtColor(self.gray, cv2.COLOR_BGR2GRAY)
         self.lower = lower_range
         self.upper = upper_range
@@ -28,7 +31,6 @@ class ImageData(object):
         self.word = bool(False)
         self.dialogue = bool(False)
 
-    '''
     def __read_pixel(frame, x1, x2, y1, y2):
         #判断四个点是否为白色，如果四个都是，返回true，否则返回false
         yes = 0
@@ -72,7 +74,7 @@ class ImageData(object):
             white = bool(True)
         return white
 
-    def is_dialogue(self):
+    def is_dialogue_color(self):
         #定位点颜色识别法
         #结合颜色判定&白色判定输出对话框判定结果
         
@@ -80,13 +82,11 @@ class ImageData(object):
         self.valid_white = ImageData.__is_valid_white(self)
         self.dialogue = self.valid_color and self.valid_white
         return self.dialogue
-    #'''
 
-    #'''
     def set_canny(self, canny):
         self.tmp_canny = canny
     
-    def is_dialogue(self):
+    def is_dialogue_template(self):
         #模板匹配法
         self.dialogue = bool(False)
         frame_canny = cv2.Canny(self.gray, 300, 500)
@@ -98,13 +98,21 @@ class ImageData(object):
         return self.dialogue
     #'''
 
+    def is_dialogue(self):
+        if self.method == 'ColorDetect':
+            return self.is_dialogue_color()
+        if self.method == 'TemplateMatch':
+            return self.is_dialogue_template()
+
     def is_word(self) -> bool:
         #判断文字
         if not self.dialogue:
             return self.word
-        # img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
-        img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #模板匹配法
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
+        if self.method == 'ColorDetect':
+            img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
+        elif self.method == 'TemplateMatch':
+            img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #模板匹配法
+            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
         ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
         if count_nonzero(img) >= 50:
             self.word = bool(True)
@@ -112,12 +120,17 @@ class ImageData(object):
 
     def get_detailed_data(self, f, ms):
         #获得详细数据
-        #return {'Frame':f, 'MiliSecond':ms, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
-        return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word} #模板匹配法
+        if self.method == 'ColorDetect':
+            return {'Frame':f, 'MiliSecond':ms, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
+        if self.method == 'TemplateMatch':
+            return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word} #模板匹配法
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条
     setmax = Signal(int)  #向GUI发送进度条最大值，并设置
+
+    COLOR_DETECT = 'ColorDetect' #定位识别法
+    TEMPLATE_MATCH = 'TemplateMatch' #模板匹配法
 
     def __Merge(dict1, dict2): 
         res = {**dict1, **dict2} 
@@ -129,7 +142,7 @@ class ImageSections(QObject):
         tmp_canny = cv2.Canny(tmp, 100, 200)
         return tmp_canny
 
-    def image_section_generator(vid, width, height):
+    def image_section_generator(vid, width, height, generate_detailed_data=False, read_method=None):
         '''
         输入视频路径，返回一个包含各节点的列表
         '''
@@ -141,7 +154,8 @@ class ImageSections(QObject):
         word_count = 1
 
         # data_li是拿来输出更详细的视频读取数据的
-        #data_li = []
+        if generate_detailed_data:
+            data_li = []
 
         #border
         border_points = sh.Reference.box_splitter(sh.Reference.reference_reader(sh.Reference.TEXT_BORDER_MX, width, height))
@@ -154,16 +168,18 @@ class ImageSections(QObject):
         upper_r = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_UPPER_RANGE))
         white_gate = sh.Settings.settings_reader(sh.Settings.DEFAULT_WHITE_THRESHOLD)
 
-        tmp_canny = ImageSections.get_template_canny('template.png') #模板匹配法
-        x1b, y1b, x2b, y2b = border_points
-        resize_factor = (x2b-x1b) / 1486
-        tmp_canny = cv2.resize(tmp_canny, (0,0),fx=resize_factor, fy=resize_factor)
+        if read_method == ImageSections.TEMPLATE_MATCH:
+            tmp_canny = ImageSections.get_template_canny('template.png') #模板匹配法
+            x1b, y1b, x2b, y2b = border_points
+            resize_factor = (x2b-x1b) / 1486
+            tmp_canny = cv2.resize(tmp_canny, (0,0),fx=resize_factor, fy=resize_factor)
 
         success, p_frame = cap.read()
         f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         pb.update_bar.emit(f)
-        prev_frame = ImageData(p_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points)
-        prev_frame.set_canny(tmp_canny) #模板匹配法
+        prev_frame = ImageData(p_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points, read_method)
+        if read_method == ImageSections.TEMPLATE_MATCH:
+            prev_frame.set_canny(tmp_canny) #模板匹配法
         prev_frame.dialogue = prev_frame.is_dialogue()
         prev_frame.word = prev_frame.is_word()
 
@@ -177,12 +193,13 @@ class ImageSections(QObject):
                 ms = cap.get(cv2.CAP_PROP_POS_MSEC)
                 f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
                 pb.update_bar.emit(f)
-                curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points)
-                curr_frame.set_canny(tmp_canny) #模板匹配法
+                curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points, read_method)
+                if read_method == ImageSections.TEMPLATE_MATCH:
+                    curr_frame.set_canny(tmp_canny) #模板匹配法
                 curr_frame.dialogue = curr_frame.is_dialogue()
                 curr_frame.word = curr_frame.is_word()
-                # data_li是拿来输出更详细视频读取结果的
-                #data_li.append(curr_frame.get_detailed_data(f, ms))
+                if generate_detailed_data:
+                    data_li.append(curr_frame.get_detailed_data(f, ms))
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
@@ -201,7 +218,6 @@ class ImageSections(QObject):
                         #前一帧是对话框，当前帧不是对话框，判断对话框消失
                         end = ms
                         spec = ImageSections.__Merge(spec, {'CloseWindow':True})
-                        #Length项为测试代码，正式打包时不需要
                         image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
                         word_count += 1
                 prev_frame = curr_frame
@@ -213,8 +229,10 @@ class ImageSections(QObject):
                 break
         cap.release()
 
-        return image_sections
-        #return image_sections, data_li
+        if generate_detailed_data:
+            return image_sections, data_li
+        else:
+            return image_sections
 
     def jitter_cleaner(img_sections:list):
         '''
