@@ -218,7 +218,7 @@ class AssBuilder(QObject):
             else:
                 #detailed data是拿来测试用的
                 generate_detailed_data = False #需要时此项改为True即可
-                video_process_method = ImageSections.COLOR_DETECT #选择对话框识别方式
+                video_process_method = ImageSections.TEMPLATE_MATCH #选择对话框识别方式
                 
                 if generate_detailed_data:
                     raw, data = ImageSections.image_section_generator(video, width, height, generate_detailed_data, video_process_method)
