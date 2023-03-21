@@ -105,17 +105,19 @@ class AssBuilder(QObject):
         tstamp = '{}:{}:{}.{}'.format(hr, m, s, ms)
         return tstamp
     
-    def __shader_builder(length:int, width, height):
+    def __shader_builder(talker:str, width, height):
         '''
         根据名字长度以及以分辨率为基础的reference生成随名字长度变化的遮罩字幕
         '''
+        half = int((len(talker)*3 -len(talker.encode()))/2) #说话人中半角字符数
+        full = int(len(talker)-half) #说话人中全角字符数
         x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
         x3b = x2b
         var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
 
-        x1 = x1b + int(var) * length
-        x2 = x2b + int(var) * length
-        x3 = x3b + int(var) * length
+        x1 = x1b + int(var) * full + int(var*0.75) * half
+        x2 = x2b + int(var) * full + int(var*0.75) * half
+        x3 = x3b + int(var) * full + int(var*0.75) * half
 
         effect = '{\\p1}'
         shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT, width, height).format(x1, x2, x3)
@@ -212,14 +214,14 @@ class AssBuilder(QObject):
                     logging.critical('[ASSautomation] IndexError')
                     return
             #获取视频分析列表
+            
+            generate_detailed_data = False #需要时此项改为True即可
+            video_process_method = ImageSections.COLOR_DETECT #选择对话框识别方式
+            
             if use_temp:
                 im_sections, alert_li = ImageSections.jitter_cleaner(AssBuilder.__read_temp('temp\\' + os.path.split(video)[1] + '.data'))
                 logging.info('[ASSautomation] Image Sections generated from Previous Data')
             else:
-                #detailed data是拿来测试用的
-                generate_detailed_data = False #需要时此项改为True即可
-                video_process_method = ImageSections.TEMPLATE_MATCH #选择对话框识别方式
-                
                 if generate_detailed_data:
                     raw, data = ImageSections.image_section_generator(video, width, height, generate_detailed_data, video_process_method)
                 else:
@@ -318,7 +320,7 @@ class AssBuilder(QObject):
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
                     #创建文本行和对应的遮罩行
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
-                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height) + extra_fad)
+                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
                 elif change_windows != [] and im['Index'] in colorfade_li:
                     #白屏
                     naming = 'WhiteFade'
@@ -342,7 +344,7 @@ class AssBuilder(QObject):
                         extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
                     fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
-                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height) + extra_fad)
+                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
                 else:
                     open_offset = 0
                     naming = None
@@ -352,7 +354,7 @@ class AssBuilder(QObject):
                         naming = 'OpenWindow'
                     #创建文本行和对应的遮罩行
                     line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], di['Body'])
-                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder(len(di['Talker']), width, height))
+                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height))
                 shader = shader.build_comment() #转化为ass内的格式
                 ass_shader.append(shader)
                 line = line.build_dialogue() #转化为ass内的格式
