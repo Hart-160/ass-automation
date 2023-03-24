@@ -5,13 +5,14 @@ import os
 import sys
 import threading
 
-#from PySide2.QtUiTools import QUiLoader
-from PySide2.QtGui import QIcon
 from PySide2.QtCore import Qt
+#from PySide2.QtUiTools import QUiLoader
+from PySide2.QtGui import QDragEnterEvent, QIcon, QPixmap
 from PySide2.QtWidgets import (QApplication, QFileDialog, QMainWindow,
                                QMessageBox)
 
 from ass_writer import *
+from asset_data import B64_Images
 from generate_tmp import *
 from image_sections import *
 from ui_entry import Ui_MainWindow
@@ -55,7 +56,9 @@ class Entrance(QMainWindow, Ui_MainWindow):
         super(Entrance, self).__init__()
         self.setupUi(self)
 
-        self.setWindowIcon(QIcon("dj_icon.ico"))
+        icon = QPixmap()
+        icon.loadFromData(B64_Images.get_b64_icon(B64_Images.ICON_B64))
+        self.setWindowIcon(icon)
         self.generate_template.clicked.connect(self.GenerateTMP)
         self.run_ass.clicked.connect(self.RunASS)
 
@@ -89,12 +92,29 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
     def __init__(self) -> None:
         super(Generate_TMP, self).__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("dj_icon.ico"))
+        icon = QPixmap()
+        icon.loadFromData(B64_Images.get_b64_icon(B64_Images.ICON_B64))
+        self.setWindowIcon(icon)
         #buttons below
         self.choose_sce.clicked.connect(self.select_sce)
         self.generate.clicked.connect(self.generateTemplate)
         self.generate_text.clicked.connect(self.generateText)
         self.back_main.clicked.connect(self.back)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasText():
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        filePathList = e.mimeData().text()
+        filePath = filePathList.split('\n')[0] #拖拽多文件只取第一个地址
+        filePath = filePath.replace('file:///', '', 1) #去除文件地址前缀的特定字符
+        if filePath.endswith('.sce'):
+            self.sce_route.setText(filePath)
+        else:
+            return
 
     def select_sce(self):
         #选择sce文件
@@ -157,7 +177,9 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
     def __init__(self) -> None:
         super(ASS_Automation, self).__init__()
         self.setupUi(self)
-        self.setWindowIcon(QIcon("dj_icon.ico"))
+        icon = QPixmap()
+        icon.loadFromData(B64_Images.get_b64_icon(B64_Images.ICON_B64))
+        self.setWindowIcon(icon)
 
         #buttons below
         self.choose_video.clicked.connect(self.select_video)
@@ -176,6 +198,30 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
         pb.update_bar.connect(self.set_bar)
         ab.text_output.connect(self.outputWritten)
         ab.send_status.connect(self.change_availability)
+
+    def dragEnterEvent(self, e):
+        if e.mimeData().hasText():
+            e.accept()
+        else:
+            e.ignore()
+
+    def dropEvent(self, e):
+        filePathList = e.mimeData().text()
+        filePath = filePathList.split('\n')[0] #拖拽多文件只取第一个地址
+        filePath = filePath.replace('file:///', '', 1) #去除文件地址前缀的特定字符
+        _, fileName = os.path.split(filePath)
+        if filePath.endswith('.sce'):
+            self.sce_route.setText(filePath)
+        elif filePath.endswith('.mp4'):
+            self.video_route.setText(filePath)
+        elif filePath.endswith('.avi'):
+            self.video_route.setText(filePath)
+        elif filePath.endswith('.flv'):
+            self.video_route.setText(filePath)
+        elif fileName.startswith('[TEMPLATE]') and filePath.endswith('.txt'):
+            self.template_route.setText(filePath)
+        else:
+            return
 
     def select_video(self):
         #选择视频文件

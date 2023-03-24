@@ -171,6 +171,7 @@ class Ui_ASS_automation(object):
 
         ASS_automation.setCentralWidget(self.centralwidget)
 
+        self.setAcceptDrops(True)
         self.retranslateUi(ASS_automation)
 
         QMetaObject.connectSlotsByName(ASS_automation)

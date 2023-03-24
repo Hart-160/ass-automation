@@ -52,6 +52,7 @@ class Ui_GenerateTemplate(object):
         self.back_main.setFont(font)
         GenerateTemplate.setCentralWidget(self.centralwidget)
 
+        self.setAcceptDrops(True)
         self.retranslateUi(GenerateTemplate)
 
         QMetaObject.connectSlotsByName(GenerateTemplate)
