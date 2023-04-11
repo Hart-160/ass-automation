@@ -177,7 +177,7 @@ class DialogueSections:
             for i in range(len(block)):
                 line = block[i]
 
-                if 'タイトル' in line and line.startswith(SCEwords.start):
+                if line.startswith(SCEwords.title) or line.startswith(SCEwords.sub_title):
                     #判断标题和副标题
                     slic = line.find('：')
                     temp = line.replace(SCEwords.end, '')
