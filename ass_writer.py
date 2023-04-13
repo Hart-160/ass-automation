@@ -79,6 +79,7 @@ class Caution(ASS_Line):
 class AssBuilder(QObject):
     text_output = Signal(str) #文字输出到GUI主线程
     send_status = Signal(bool) #告知GUI运行结果，弹出提示框，以及使界面上的两个按钮可用
+    error_message = Signal(int) #告知GUI出现错误，弹出提示框
 
     def __get_tstamp(milliseconds) -> str:
         '''
@@ -209,9 +210,14 @@ class AssBuilder(QObject):
                     ev_sections = DialogueSections.tl_substitude(template, DialogueSections.sce_handler(sce))
                     logging.info('[ASSautomation] Dialogue Sections generated w/ template')
                 except IndexError:
-                    ab.text_output.emit('请检查模板文件中有无多余换行！')
+                    ab.text_output.emit('请检查模板文件中有无多余换行、或说话人后是否全部为半角冒号！')
                     ab.send_status.emit(False)
                     logging.critical('[ASSautomation] IndexError')
+                    return
+                except UnicodeDecodeError:
+                    ab.text_output.emit('请确保模板文件的编码为UTF-8！')
+                    ab.send_status.emit(False)
+                    logging.critical('[ASSautomation] UnicodeDecodeError')
                     return
             #获取视频分析列表
             

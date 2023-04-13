@@ -4,6 +4,7 @@ import logging
 import os
 import sys
 import threading
+import traceback
 
 from PySide2.QtCore import Qt
 #from PySide2.QtUiTools import QUiLoader
@@ -198,6 +199,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
         pb.update_bar.connect(self.set_bar)
         ab.text_output.connect(self.outputWritten)
         ab.send_status.connect(self.change_availability)
+        ab.error_message.connect(self.pop_error)
 
     def dragEnterEvent(self, e):
         if e.mimeData().hasText():
@@ -296,7 +298,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
     def change_availability(self, yes:bool):
         #传入参数时告知主线程GUI取消两个按钮的disable状态
         if yes:
-            QMessageBox.information(self, 'D4DJ ASS AUTOMATION', '字幕文件已生成！<br> 文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
+            QMessageBox.information(self, 'D4DJ ASS AUTOMATION', '字幕文件已生成！<br>文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
             self.back_main.setDisabled(False)
             self.generate.setDisabled(False)
             self.choose_video.setDisabled(False)
@@ -310,6 +312,15 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             self.choose_sce.setDisabled(False)
             self.choose_template.setDisabled(False)
 
+    def pop_error(self, status_code:int):
+        if status_code == -1:
+            QMessageBox.critical(self, 'D4DJ ASS AUTOMATION', '发生未知错误！<br>请将temp/runtime-log.log发送给作者广间！', QMessageBox.Ok, QMessageBox.Ok)
+            self.back_main.setDisabled(False)
+            self.generate.setDisabled(False)
+            self.choose_video.setDisabled(False)
+            self.choose_sce.setDisabled(False)
+            self.choose_template.setDisabled(False)
+            
     def start_ass(self):
         #运行轴机
         video = self.video_route.text()
@@ -358,10 +369,12 @@ if __name__ == '__main__':
     def handle_exception(exc_type, exc_value, exc_traceback):
         #GUI部分的log输出，sys的excepthook有三个参数
         logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback)) # 重点
+        ab.error_message.emit(-1)
 
     def thread_exception(exc_type):
         #轴机主体的log输出（因为是单独开的线程）threading的excepthook只有一个参数
         logger.error("Uncaught exception", exc_info=(exc_type))
+        ab.error_message.emit(-1)
 
     sys.excepthook = handle_exception
     threading.excepthook = thread_exception
