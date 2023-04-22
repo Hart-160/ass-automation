@@ -33,6 +33,7 @@ MANIFEST
 *.log
 test.py
 test2.py
+test_modules.py
 tracktest.py
 *.ass
 *reference.txt
