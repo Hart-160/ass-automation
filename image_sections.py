@@ -32,6 +32,7 @@ class ImageData(object):
         self.white_threshold = white_threshold
         self.word = bool(False)
         self.dialogue = bool(False)
+        self.first_letter_mat = None
 
     def __read_pixel(frame, x1, x2, y1, y2):
         #判断四个点是否为白色，如果四个都是，返回true，否则返回false
@@ -106,19 +107,20 @@ class ImageData(object):
         if self.method == 'TemplateMatch':
             return self.is_dialogue_template()
 
-    def is_word(self) -> bool:
+    def is_word(self, var):
         #判断文字
         if not self.dialogue:
-            return self.word
+            return self.word, self.first_letter_mat
         if self.method == 'ColorDetect':
             img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
         elif self.method == 'TemplateMatch':
             img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #模板匹配法
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
         ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
+        self.first_letter_mat = img[0:var,var:var*3]
         if count_nonzero(img) >= 50:
             self.word = bool(True)
-        return self.word
+        return self.word, self.first_letter_mat
 
     def get_detailed_data(self, f, ms):
         #获得详细数据
@@ -169,6 +171,9 @@ class ImageSections(QObject):
         upper_r = sh.Settings.hsv_range_splitter(sh.Settings.settings_reader(sh.Settings.DEFAULT_UPPER_RANGE))
         white_gate = sh.Settings.settings_reader(sh.Settings.DEFAULT_WHITE_THRESHOLD)
 
+        #传入is_word，此项为单个字的字号，用于截取第一个字的黑白图以比对
+        var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
+
         if read_method == ImageSections.TEMPLATE_MATCH:
             tmp_canny = ImageSections.get_template_canny() #模板匹配法
             x1b, y1b, x2b, y2b = border_points
@@ -182,7 +187,7 @@ class ImageSections(QObject):
         if read_method == ImageSections.TEMPLATE_MATCH:
             prev_frame.set_canny(tmp_canny) #模板匹配法
         prev_frame.dialogue = prev_frame.is_dialogue()
-        prev_frame.word = prev_frame.is_word()
+        prev_frame.word, prev_frame.first_letter_mat = prev_frame.is_word(var)
 
         start = ''
         end = ''
@@ -198,13 +203,19 @@ class ImageSections(QObject):
                 if read_method == ImageSections.TEMPLATE_MATCH:
                     curr_frame.set_canny(tmp_canny) #模板匹配法
                 curr_frame.dialogue = curr_frame.is_dialogue()
-                curr_frame.word = curr_frame.is_word()
+                curr_frame.word, curr_frame.first_letter_mat = curr_frame.is_word(var)
                 if generate_detailed_data:
                     data_li.append(curr_frame.get_detailed_data(f, ms))
                 if curr_frame.dialogue == prev_frame.dialogue:
                     if curr_frame.dialogue:
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             #判断文本更新
+                            end = ms
+                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
+                            start = ms
+                            spec = {}
+                            word_count += 1
+                        elif not (prev_frame.first_letter_mat == curr_frame.first_letter_mat).all() and count_nonzero(prev_frame.first_letter_mat) - count_nonzero(curr_frame.first_letter_mat) > 50:
                             end = ms
                             image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
                             start = ms
@@ -269,7 +280,8 @@ class ImageSections(QObject):
         for t in tmp:
             start = t[0]['Start']
             end = t[-1]['End']
-            alert.append({'Index':count, 'Start':start, 'End':end, 'Jitter':True})
+            if end - start >= 100:
+                alert.append({'Index':count, 'Start':start, 'End':end, 'Jitter':True})
 
         for i in range(len(img_sections)):
             img = img_sections[i]
