@@ -31,16 +31,20 @@ MANIFEST
 *.ico
 *.bat
 *.log
+*.data
+*.exe
+*.ass
+*reference.txt
+
 test.py
 test2.py
 test_modules.py
 tracktest.py
-*.ass
-*reference.txt
+update_git.py
+
 archive tests/
 temp/
-*.data
-*.exe
+
 [1920x1440]color-test.ass
 settings_color.txt
 settings_template.txt

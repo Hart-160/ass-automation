@@ -421,11 +421,9 @@ class AssBuilder(QObject):
             #复制untitled文件至视频同目录，并进行重命名
             src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH, width, height)
             route, vid_name = os.path.split(video)
-            shutil.copy(src, route)
-            logging.info('[ASSautomation] Untitled.ass copied to destination')
-            old_name = os.path.join(route, src)
+            with open(src, 'r', encoding='utf-8') as f:
+                data = f.readlines()
             new_name = os.path.join(route, video + '.ass')
-            new_name = AssBuilder.__rename(old_name, new_name)
 
             pop_instruction = 1
             log_infos.append('TASK-VIDEO = {}'.format(vid_name))
@@ -434,7 +432,9 @@ class AssBuilder(QObject):
                 log_infos.append('USE-SAVED-DATA = {}'.format(os.path.split(video)[1] + '.data'))
 
             #写入字幕至复制出的untitled文件
-            with open(new_name, 'a+', encoding='utf-8') as a:
+            with open(new_name, 'w+', encoding='utf-8') as a:
+                for d in data:
+                    a.write(d)
                 for s in ass_shader:
                     a.write(s + '\n')
                 for al in ass_alert:
