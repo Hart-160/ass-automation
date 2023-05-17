@@ -198,7 +198,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
         pb.setmax.connect(self.set_max)
         pb.update_bar.connect(self.set_bar)
         ab.text_output.connect(self.outputWritten)
-        ab.send_status.connect(self.change_availability)
+        ab.send_status.connect(self.change_status)
         ab.error_message.connect(self.pop_error)
 
     def dragEnterEvent(self, e):
@@ -311,31 +311,26 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
         #设置进度条的值
         self.progressBar.setValue(value)
 
-    def change_availability(self, yes:bool):
+    def batch_change_availability(self, status:bool):
+        self.back_main.setDisabled(status)
+        self.generate.setDisabled(status)
+        self.choose_video.setDisabled(status)
+        self.choose_sce.setDisabled(status)
+        self.choose_template.setDisabled(status)
+
+    def change_status(self, yes:bool):
         #传入参数时告知主线程GUI取消两个按钮的disable状态
         if yes:
             QMessageBox.information(self, 'D4DJ ASS AUTOMATION', '字幕文件已生成！<br>文件位于视频路径', QMessageBox.Ok, QMessageBox.Ok)
-            self.back_main.setDisabled(False)
-            self.generate.setDisabled(False)
-            self.choose_video.setDisabled(False)
-            self.choose_sce.setDisabled(False)
-            self.choose_template.setDisabled(False)
+            self.batch_change_availability(False)
         else:
             QMessageBox.critical(self, 'D4DJ ASS AUTOMATION', '请检查报错后重新运行！', QMessageBox.Ok, QMessageBox.Ok)
-            self.back_main.setDisabled(False)
-            self.generate.setDisabled(False)
-            self.choose_video.setDisabled(False)
-            self.choose_sce.setDisabled(False)
-            self.choose_template.setDisabled(False)
+            self.batch_change_availability(False)
 
     def pop_error(self, status_code:int):
         if status_code == -1:
             QMessageBox.critical(self, 'D4DJ ASS AUTOMATION', '发生未知错误！<br>请将temp/runtime-log.log发送给作者广间！', QMessageBox.Ok, QMessageBox.Ok)
-            self.back_main.setDisabled(False)
-            self.generate.setDisabled(False)
-            self.choose_video.setDisabled(False)
-            self.choose_sce.setDisabled(False)
-            self.choose_template.setDisabled(False)
+            self.batch_change_availability(False)
             
     def start_ass(self):
         #运行轴机
@@ -350,11 +345,7 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
             logging.warning('[ASSautomation] SCE or Video not selected')
         else:
             self.output_window.clear()
-            self.back_main.setDisabled(True)
-            self.generate.setDisabled(True)
-            self.choose_video.setDisabled(True)
-            self.choose_sce.setDisabled(True)
-            self.choose_template.setDisabled(True)
+            self.batch_change_availability(True)
 
             use_temp = False
             if os.path.exists('temp\\' + os.path.split(video)[1] + '.data'):
