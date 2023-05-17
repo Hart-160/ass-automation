@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import time
+from tzlocal import get_localzone
 
 import cv2
 from PySide2.QtCore import QObject, Signal
@@ -130,15 +131,19 @@ class AssBuilder(QObject):
         传入提示列表，写入log文件内
         '''
         log_path = os.path.join(os.getcwd(), 'ASS-automation.log')
+        tz = get_localzone()
+        tim = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
         if os.path.exists(log_path):
             with open(log_path, 'a+', encoding='utf-8') as f:
                 f.write('----------------------------------------------------------------\n')
+                f.write(f'{tim} {tz}\n')
                 for i in infos:
                     f.write(i + '\n')
         else:
             with open(log_path, 'w+', encoding='utf-8') as f:
                 f.write('###D4DJ-ASS-AUTOMATION-LOG###\n')
                 f.write('----------------------------------------------------------------\n')
+                f.write(f'{tim} {tz}\n')
                 for i in infos:
                     f.write(i + '\n')
 
