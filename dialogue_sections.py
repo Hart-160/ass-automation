@@ -249,7 +249,7 @@ class DialogueSections:
                                         jit.amplitude = amplitude
                             event_list.append(jit.get_dict())
                     else:
-                        jit = Jitter(index - 1)
+                        jit = Jitter(index)
                         if SCEwords.time_identifier in line:
                             temp1 = line.find(SCEwords.time_identifier)
                             temp2 = line.find(SCEwords.end_backup, temp1)

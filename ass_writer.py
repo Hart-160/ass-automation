@@ -249,10 +249,12 @@ class AssBuilder(QObject):
             change_li = []
             colorfade_li = []
             jitter_list = []
+            jitter_im_sections = []
 
             ass_dialogue = []
             ass_shader = []
             ass_alert = []
+            ass_jitter = []
 
             #将sce分析列表内的项目分类
             for d in ev_sections:
@@ -287,6 +289,14 @@ class AssBuilder(QObject):
                             if c['EventType'] not in ims:
                                 ims[c['EventType']] = True
                             break
+                for j in jitter_list:
+                    for ims in im_sections:
+                        if ims['Index'] == j['Index'] or ims['Index'] == j['Index'] - 1:
+                            if 'OpenWindow' in ims and not j['Index'] in open_windows:
+                                jitter_im_sections.append({'Index':j['Index'], 'Start':ims['Start'] - 10, 'End':ims['Start'] - 10, 'Length':0, 'Jitter':True})
+                                ims.pop('OpenWindow')
+                            if 'CloseWindow' in ims and not j['Index'] in change_windows:
+                                ims.pop('CloseWindow')
 
             for di, im in zip(dialogue_list, im_sections):
                 if 'CloseWindow' in im:
@@ -393,9 +403,15 @@ class AssBuilder(QObject):
 
             #警告列表填入
             for a in alert_li:
-                alert = Caution(AssBuilder.__get_tstamp(a['Start']), AssBuilder.__get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NIT MAY BE A JITTER')
+                alert = Caution(AssBuilder.__get_tstamp(a['Start']), AssBuilder.__get_tstamp(a['End']), 'ALERT', 'PLEASE TAKE NOTICE\\NCHECK IF ERROR')
                 alert = alert.build_comment()
                 ass_alert.append(alert)
+            
+            #抖动提示填入
+            for j in jitter_im_sections:
+                jitter = Caution(AssBuilder.__get_tstamp(j['Start']), AssBuilder.__get_tstamp(j['End']), 'JITTER', 'A JITTER EFFECT\\NTAKES PLACE AROUND HERE')
+                jitter = jitter.build_comment()
+                ass_jitter.append(jitter)
             
             #复制untitled文件至视频同目录，并进行重命名
             src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH, width, height)
@@ -418,6 +434,8 @@ class AssBuilder(QObject):
                     a.write(s + '\n')
                 for al in ass_alert:
                     a.write(al + '\n')
+                for ji in ass_jitter:
+                    a.write(ji + '\n')
                 for dial in ass_dialogue:
                     a.write(dial + '\n')
             logging.info('[ASSautomation] ASS file has written')
