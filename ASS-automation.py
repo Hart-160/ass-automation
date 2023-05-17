@@ -209,21 +209,37 @@ class ASS_Automation(QMainWindow, Ui_ASS_automation):
 
     def dropEvent(self, e):
         filePathList = e.mimeData().text()
-        filePath = filePathList.split('\n')[0] #拖拽多文件只取第一个地址
-        filePath = filePath.replace('file:///', '', 1) #去除文件地址前缀的特定字符
-        _, fileName = os.path.split(filePath)
-        if filePath.endswith('.sce'):
-            self.sce_route.setText(filePath)
-        elif filePath.endswith('.mp4'):
-            self.video_route.setText(filePath)
-        elif filePath.endswith('.avi'):
-            self.video_route.setText(filePath)
-        elif filePath.endswith('.flv'):
-            self.video_route.setText(filePath)
-        elif fileName.startswith('[TEMPLATE]') and filePath.endswith('.txt'):
-            self.template_route.setText(filePath)
-        else:
-            return
+        filePaths = filePathList.split('\n')
+        
+        vid_path = ''
+        sce_path = ''
+        txt_path = ''
+        
+        for filePath in filePaths:
+            filePath = filePath.replace('file:///', '', 1)
+            _, fileName = os.path.split(filePath)
+            if filePath.endswith('.sce'):
+                if sce_path == '':
+                    sce_path = filePath
+                    self.sce_route.setText(sce_path)
+            elif filePath.endswith('.mp4'):
+                if vid_path == '':
+                    vid_path = filePath
+                    self.video_route.setText(vid_path)
+            elif filePath.endswith('.avi'):
+                if vid_path == '':
+                    vid_path = filePath
+                    self.video_route.setText(vid_path)
+            elif filePath.endswith('.flv'):
+                if vid_path == '':
+                    vid_path = filePath
+                    self.video_route.setText(vid_path)
+            elif fileName.startswith('[TEMPLATE]') and filePath.endswith('.txt'):
+                if txt_path == '':
+                    txt_path = filePath
+                    self.template_route.setText(txt_path)
+            else:
+                return
 
     def select_video(self):
         #选择视频文件
