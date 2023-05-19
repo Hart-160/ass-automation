@@ -247,15 +247,20 @@ class AssBuilder(QObject):
                     AssBuilder.__write_temp('temp\\[DETAILED] ' + os.path.split(video)[1] + '.data', data)
                     logging.info('[ASSautomation] Detailed Image Sections data written')
 
+            #存放完整信息的列表
             dialogue_list = []
             title_list = []
             change_windows = []
             open_windows = []
-            change_li = []
-            colorfade_li = []
             jitter_list = []
             jitter_im_sections = []
+            
+            #存放index的列表
+            change_li = []
+            colorfade_li = []
+            open_li = []
 
+            #存放字幕行的列表
             ass_dialogue = []
             ass_shader = []
             ass_alert = []
@@ -274,14 +279,19 @@ class AssBuilder(QObject):
                 if d['EventType'] == 'Jitter':
                     jitter_list.append(d)
 
-            #为有颜色变化的对话框消失做标记，分类到专门的黑\白屏列表中
+            #将对应变化的index加入到列表中，方便后续步骤通过index查询
             if change_windows != []:
                 for ch in change_windows:
                     change_li.append(ch['Index'])
                     if 'Color' in ch:
                         colorfade_li.append(ch['Index'])
+            if open_windows != []:
+                for op in open_windows:
+                    open_li.append(op['Index'])
 
+            #根据剧情文件修正image_section，校验步骤
             if len(dialogue_list) == len(im_sections):
+                #添加视频结果未识别出的对话框变化
                 for o in open_windows:
                     for ims in im_sections:
                         if ims['Index'] == o['Index']:
@@ -298,11 +308,12 @@ class AssBuilder(QObject):
                     for ims in im_sections:
                         if ims['Index'] == j['Index']:
                             jitter_im_sections.append({'Index':j['Index'], 'Start':ims['Start'] - 250, 'End':ims['Start'], 'Length':250, 'Jitter':True})
-                            if 'OpenWindow' in ims and not j['Index'] in open_windows:
-                                ims.pop('OpenWindow')
-                        elif ims['Index'] == j['Index'] - 1:
-                            if 'CloseWindow' in ims and not j['Index'] in change_windows:
-                                ims.pop('CloseWindow')
+                #删去误添加的对话框变化
+                for ims in im_sections:
+                    if 'OpenWindow' in ims and ims['Index'] not in open_li:
+                        ims.pop('OpenWindow')
+                    if 'CloseWindow' in ims and ims['Index'] not in change_li:
+                        ims.pop('CloseWindow')
 
             for di, im in zip(dialogue_list, im_sections):
                 if 'CloseWindow' in im:
