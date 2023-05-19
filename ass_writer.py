@@ -296,10 +296,11 @@ class AssBuilder(QObject):
                             break
                 for j in jitter_list:
                     for ims in im_sections:
-                        if ims['Index'] == j['Index'] or ims['Index'] == j['Index'] - 1:
+                        if ims['Index'] == j['Index']:
+                            jitter_im_sections.append({'Index':j['Index'], 'Start':ims['Start'] - 250, 'End':ims['Start'], 'Length':250, 'Jitter':True})
                             if 'OpenWindow' in ims and not j['Index'] in open_windows:
-                                jitter_im_sections.append({'Index':j['Index'], 'Start':ims['Start'] - 10, 'End':ims['Start'] - 10, 'Length':0, 'Jitter':True})
                                 ims.pop('OpenWindow')
+                        elif ims['Index'] == j['Index'] - 1:
                             if 'CloseWindow' in ims and not j['Index'] in change_windows:
                                 ims.pop('CloseWindow')
 
@@ -414,9 +415,12 @@ class AssBuilder(QObject):
             
             #抖动提示填入
             for j in jitter_im_sections:
-                jitter = Caution(AssBuilder.__get_tstamp(j['Start']), AssBuilder.__get_tstamp(j['End']), 'JITTER', 'A JITTER EFFECT\\NTAKES PLACE AROUND HERE')
-                jitter = jitter.build_comment()
-                ass_jitter.append(jitter)
+                jitter_shade = Shader(AssBuilder.__get_tstamp(j['Start']), AssBuilder.__get_tstamp(j['End']), 'JITTER-Shade', '{\jitter(10,10,10,10,1)\\t(250\jitter(3,3,3,3,1))}{\p1}')
+                jitter_text = Dialogue(AssBuilder.__get_tstamp(j['Start']), AssBuilder.__get_tstamp(j['End']), 'JITTER-Text', '{\jitter(10,10,10,10,1)\\t(250\jitter(3,3,3,3,1))}')
+                jitter_shade = jitter_shade.build_comment()
+                jitter_text = jitter_text.build_comment()
+                ass_jitter.append(jitter_shade)
+                ass_jitter.append(jitter_text)
             
             #复制untitled文件至视频同目录，并进行重命名
             src = sh.Settings.settings_reader(sh.Settings.SAMPLE_ASS_PATH, width, height)

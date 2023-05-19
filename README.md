@@ -54,6 +54,7 @@ vidoe_process_thread = ImageSections.TEMPLATE_MATCH #模板匹配法，对应稳
 | 源码&release包含 | 1920x1440 |   iPad Air3等无touch bar设备   |
 |   release包含   | 1920x888 | iPhone 12，13等有touch bar设备 |
 |   release包含   | 1920x1260 |  iPad mini6等有touch bar设备  |
+|   release包含   | 1920x1334 |   iPad Air5等有touch bar设备   |
 
 - [精简版教程](https://www.bilibili.com/read/cv18462837)
 - [详细版教程](https://docs.qq.com/doc/DTENkZGloYXNQZ01Y)

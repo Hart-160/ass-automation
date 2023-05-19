@@ -219,49 +219,19 @@ class DialogueSections:
 
                 if SCEwords.jitter_sign in line:
                     # 判断对话框抖动
-                    if line.startswith(SCEwords.jitter_sign):
-                        if SCEwords.speaker in lis[i+1]:
-                            jit = Jitter(index)
-                            if SCEwords.time_identifier in line:
-                                temp1 = line.find(SCEwords.time_identifier)
-                                temp2 = line.find(SCEwords.end_backup, temp1)
-                                temp = line[temp1:temp2]
-                                if temp != '':
-                                    temp = temp.split('、')
-                                    time = temp[0].split('：')[1]
-                                    jit.time = float(time)
-                                    if len(temp) > 1:
-                                        amplitude = temp[1].split('：')[1]
-                                        jit.amplitude = amplitude
-                            event_list.append(jit.get_dict())
-                        else:
-                            jit = Jitter(index - 1)
-                            if SCEwords.time_identifier in line:
-                                temp1 = line.find(SCEwords.time_identifier)
-                                temp2 = line.find(SCEwords.end_backup, temp1)
-                                temp = line[temp1:temp2]
-                                if temp != '':
-                                    temp = temp.split('、')
-                                    time = temp[0].split('：')[1]
-                                    jit.time = float(time)
-                                    if len(temp) > 1:
-                                        amplitude = temp[1].split('：')[1]
-                                        jit.amplitude = amplitude
-                            event_list.append(jit.get_dict())
-                    else:
-                        jit = Jitter(index)
-                        if SCEwords.time_identifier in line:
-                            temp1 = line.find(SCEwords.time_identifier)
-                            temp2 = line.find(SCEwords.end_backup, temp1)
-                            temp = line[temp1:temp2]
-                            if temp != '':
-                                temp = temp.split('、')
-                                time = temp[0].split('：')[1]
-                                jit.time = float(time)
-                                if len(temp) > 1:
-                                    amplitude = temp[1].split('：')[1]
-                                    jit.amplitude = amplitude
-                        event_list.append(jit.get_dict())
+                    jit = Jitter(index)
+                    if SCEwords.time_identifier in line:
+                        temp1 = line.find(SCEwords.time_identifier)
+                        temp2 = line.find(SCEwords.end_backup, temp1)
+                        temp = line[temp1:temp2]
+                        if temp != '':
+                            temp = temp.split('、')
+                            time = temp[0].split('：')[1]
+                            jit.time = float(time)
+                            if len(temp) > 1:
+                                amplitude = temp[1].split('：')[1]
+                                jit.amplitude = amplitude
+                    event_list.append(jit.get_dict())
 
                 if line.startswith(SCEwords.speaker):
                     temp = line.replace(SCEwords.speaker, '')
