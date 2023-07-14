@@ -11,7 +11,7 @@
 注：从v2.0开始，每次release将会有两个发行版本。
 
 - 稳定版（Template Match）：v2.0新增，运行速度较慢，但出错率更低
-- 快速版（Color Detect）：继承现有的读取方式，若无大范围错误可使用此版本
+- 快速版（Color Detect）：继承现有的读取方式，若无大范围错误可使用此版本提升速度
 
 **请勿将运行轴机所需的视频、剧情文件等放在轴机文件夹目录下！！**
 
@@ -43,6 +43,11 @@ video_process_thread = ImageSections.COLOR_DETECT #定位识别法，对应快�
 vidoe_process_thread = ImageSections.TEMPLATE_MATCH #模板匹配法，对应稳定版
 ```
 
+#### 关于Aegisub stuffs文件夹
+
+- 内含制作本程序生成字幕的辅助工具
+- 安装指南&使用说明请参考Release版内的README.txt
+
 ## 使用指南
 
 若未提供所需分辨率的预设，请通过下方联系方式联系作者制作对应预设
@@ -72,6 +77,6 @@ vidoe_process_thread = ImageSections.TEMPLATE_MATCH #模板匹配法，对应稳
 
 ## 特别鸣谢
 
-- Jeunette：原版作者，感谢提供抖动识别算法相关的帮助
+- Jeunette：原版轴机作者，原版打字机脚本作者，感谢提供抖动识别算法相关的帮助
 - 由理：感谢提供模板识别法的思路
 - NOTE：感谢协助测试

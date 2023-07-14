@@ -1,12 +1,12 @@
 import json
 import logging
 import os
-import shutil
 import time
-from tzlocal import get_localzone
 
 import cv2
+from PIL import ImageFont
 from PySide2.QtCore import QObject, Signal
+from tzlocal import get_localzone
 
 import settings_handler as sh
 from dialogue_sections import DialogueSections
@@ -111,15 +111,16 @@ class AssBuilder(QObject):
         '''
         根据名字长度以及以分辨率为基础的reference生成随名字长度变化的遮罩字幕
         '''
-        half = int((len(talker)*3 -len(talker.encode()))/2) #说话人中半角字符数
-        full = int(len(talker)-half) #说话人中全角字符数
         x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
         x3b = x2b
         var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
 
-        x1 = x1b + int(var) * full + int(var*0.75) * half
-        x2 = x2b + int(var) * full + int(var*0.75) * half
-        x3 = x3b + int(var) * full + int(var*0.75) * half
+        font = ImageFont.truetype("Aegisub stuffs/FOT-RodinNTLG Pro B.otf", var)
+        length = font.getlength(talker)
+
+        x1 = x1b + int(length)
+        x2 = x2b + int(length)
+        x3 = x3b + int(length)
 
         effect = '{\\p1}'
         shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT, width, height).format(x1, x2, x3)

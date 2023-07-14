@@ -1,4 +1,5 @@
-numpy==1.24.1
-opencv-python==4.7.0.68
+opencv-python==4.8.0.74
+numpy==1.24.4
+Pillow==10.0.0
 PySide2==5.15.2.1
 shiboken2==5.15.2.1
