@@ -143,6 +143,8 @@ class TemplateUtils:
                     continue
                 elif line.startswith('\ufeff{ Main'):
                     continue
+                elif line.startswith('}'):
+                    continue
                 elif not line.startswith(SCEwords.start):
                     if '＠' in line:
                         temp = TemplateUtils.__clean_text(line)
