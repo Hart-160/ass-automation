@@ -117,6 +117,25 @@
      <string>返回上级</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="generate_docx">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>50</y>
+      <width>121</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>微软雅黑</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="text">
+     <string>Docx提取</string>
+    </property>
+   </widget>
   </widget>
  </widget>
  <resources/>

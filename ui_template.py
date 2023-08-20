@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'templateAxvxCw.ui'
+## Form generated from reading UI file 'templategaVxbB.ui'
 ##
 ## Created by: Qt User Interface Compiler version 5.15.2
 ##
@@ -50,9 +50,12 @@ class Ui_GenerateTemplate(object):
         self.back_main.setObjectName(u"back_main")
         self.back_main.setGeometry(QRect(10, 50, 121, 41))
         self.back_main.setFont(font)
+        self.generate_docx = QPushButton(self.centralwidget)
+        self.generate_docx.setObjectName(u"generate_docx")
+        self.generate_docx.setGeometry(QRect(140, 50, 121, 41))
+        self.generate_docx.setFont(font)
         GenerateTemplate.setCentralWidget(self.centralwidget)
 
-        self.setAcceptDrops(True)
         self.retranslateUi(GenerateTemplate)
 
         QMetaObject.connectSlotsByName(GenerateTemplate)
@@ -64,5 +67,6 @@ class Ui_GenerateTemplate(object):
         self.choose_sce.setText(QCoreApplication.translate("GenerateTemplate", u"\u9009\u62e9\u5267\u60c5\u6587\u4ef6", None))
         self.generate_text.setText(QCoreApplication.translate("GenerateTemplate", u"\u6587\u672c\u63d0\u53d6", None))
         self.back_main.setText(QCoreApplication.translate("GenerateTemplate", u"\u8fd4\u56de\u4e0a\u7ea7", None))
+        self.generate_docx.setText(QCoreApplication.translate("GenerateTemplate", u"Docx\u63d0\u53d6", None))
     # retranslateUi
 

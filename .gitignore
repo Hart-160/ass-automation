@@ -35,11 +35,12 @@ MANIFEST
 *.exe
 *.ass
 *reference.txt
+*.png
+*.xlsx
 
 test.py
 test2.py
 test_modules.py
-tracktest.py
 update_git.py
 
 archive tests/
@@ -49,7 +50,6 @@ res/
 [1920x1440]color-test.ass
 settings_color.txt
 settings_template.txt
-template.png
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

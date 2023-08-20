@@ -100,6 +100,7 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
         self.choose_sce.clicked.connect(self.select_sce)
         self.generate.clicked.connect(self.generateTemplate)
         self.generate_text.clicked.connect(self.generateText)
+        self.generate_docx.clicked.connect(self.generateDocx)
         self.back_main.clicked.connect(self.back)
 
     def dragEnterEvent(self, e):
@@ -163,6 +164,21 @@ class Generate_TMP(QMainWindow, Ui_GenerateTemplate):
             rename(rout + '\\' + sole_name + '.txt', rout + new_name)
             QMessageBox.information(self, '任务完成', '文本已成功提取！', QMessageBox.Ok, QMessageBox.Ok)
             logging.info('[GenerateTMP] Text generated')
+
+    def generateDocx(self):
+        #生成docx文本（txt转docx）
+        sce = self.sce_route.text()
+        if sce == '':
+            QMessageBox.critical(self, '发生错误', '必须填入SCE文件！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.warning('[GenerateTMP] SCE file not selected')
+        else:
+            TemplateUtils.sce_to_docx(sce)
+            rout, name = os.path.split(sce)
+            sole_name= os.path.splitext(name)[0]
+            new_name = '\\[DOCX] ' + sole_name + '.docx'
+            rename(rout + '\\' + sole_name + '.docx', rout + new_name)
+            QMessageBox.information(self, '任务完成', 'Docx文件已成功生成！', QMessageBox.Ok, QMessageBox.Ok)
+            logging.info('[GenerateTMP] Docx file generated')
 
     def back(self):
         #返回entry界面

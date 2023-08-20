@@ -1,5 +1,7 @@
-opencv-python==4.8.0.74
+lxml==4.9.3
 numpy==1.24.4
+opencv-python==4.8.0.74
 Pillow==10.0.0
 PySide2==5.15.2.1
+python-docx==0.8.11
 shiboken2==5.15.2.1

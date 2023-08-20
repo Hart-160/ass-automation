@@ -1,4 +1,4 @@
-import os.path
+import os
 
 '''
 这个部分负责文本提取和模板生成
@@ -178,6 +178,49 @@ class TemplateUtils:
         '''
         filepath = TemplateUtils.clean_sce(pth)
         TemplateUtils.txt_to_template(filepath)
+
+    def txt_to_docx(route):
+        '''
+        输入文本路径（来自文本清理）
+        基于提取的文本生成docx文件
+        '''
+
+        from docx import Document
+        from docx.oxml.ns import qn
+        from docx.shared import Pt,RGBColor
+
+        document = Document()
+
+        document.styles['Normal'].font.name = u'等线'
+        document.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), u'等线')
+        document.styles['Normal'].font.size = Pt(12)
+        document.styles['Normal'].font.color.rgb = RGBColor(0,0,0)
+
+        paragraph = document.add_paragraph()
+        run = paragraph.add_run()
+        run.font.name=u'Cambria'
+        run.font.color.rgb = RGBColor(0,0,0)
+        run._element.rPr.rFonts.set(qn('w:eastAsia'), u'Cambria')
+
+        with open(route, 'r+', encoding='utf-8') as original:
+            li = original.readlines()
+
+        for line in li:
+            document.add_paragraph(line)
+        
+        temp_filepath, filename = os.path.split(route)
+        file_sole_name = os.path.splitext(filename)[0]
+        docx_name = file_sole_name + '.docx'
+        new_filepath = os.path.join(temp_filepath, docx_name)
+        document.save(new_filepath)
+        os.remove(route)
+
+    def sce_to_docx(pth):
+        '''
+        输入sce路径，直接生成docx文件
+        '''
+        filepath = TemplateUtils.clean_sce(pth)
+        TemplateUtils.txt_to_docx(filepath)
 
 if __name__ == '__main__':
     pass
