@@ -1,7 +1,14 @@
+altgraph==0.17.3
 lxml==4.9.3
 numpy==1.24.4
 opencv-python==4.8.0.74
+pefile==2023.2.7
 Pillow==10.0.0
+pyinstaller==5.13.0
+pyinstaller-hooks-contrib==2023.7
 PySide2==5.15.2.1
 python-docx==0.8.11
+pywin32-ctypes==0.2.2
 shiboken2==5.15.2.1
+tzdata==2023.3
+tzlocal==5.0.1

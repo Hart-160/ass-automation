@@ -324,7 +324,11 @@ class AssBuilder(QObject):
 
                     if change_windows != [] and im['Index'] in colorfade_li:
                         #黑屏
-                        naming = 'BlackFade'
+                        if change_windows[change_li.index(im['Index'])]['Color'] == '黒':
+                            naming = 'BlackFade'
+                        if change_windows[change_li.index(im['Index'])]['Color'] == '白':
+                            naming = 'WhiteFade'
+
                         extra_fad = '{\\fad(0,500)}'
                         text_fad = '{\\fad(0,500)}'
                         extra_cut = 0
@@ -339,7 +343,7 @@ class AssBuilder(QObject):
                             elif video_process_method == ImageSections.COLOR_DETECT:
                                 base_cut_amount = base_fade_amount
                             
-                            naming = 'BlackFade ({})'.format(multiply_index)
+                            naming =  naming + ' ({})'.format(multiply_index)
                             extra_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                             text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                             extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
@@ -357,7 +361,11 @@ class AssBuilder(QObject):
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
                 elif change_windows != [] and im['Index'] in colorfade_li:
                     #白屏
-                    naming = 'WhiteFade'
+                    if change_windows[change_li.index(im['Index'])]['Color'] == '黒':
+                        naming = 'BlackFade'
+                    if change_windows[change_li.index(im['Index'])]['Color'] == '白':
+                        naming = 'WhiteFade'
+                    
                     extra_fad = '{\\fad(0,500)}'
                     text_fad = '{\\fad(0,500)}'
                     extra_cut = 0
@@ -372,7 +380,7 @@ class AssBuilder(QObject):
                         elif video_process_method == ImageSections.COLOR_DETECT:
                             base_cut_amount = base_fade_amount
                         
-                        naming = 'WhiteFade ({})'.format(multiply_index)
+                        naming = naming + ' ({})'.format(multiply_index)
                         extra_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                         text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                         extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)

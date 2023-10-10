@@ -193,7 +193,7 @@ class DialogueSections:
 
                 if SCEwords.close_window in line:
                     # 判断对话框消失
-                    if SCEwords.fade_in in block[i-1]:
+                    if SCEwords.fade_in in block[i-1] and i != 0:
                         # 带有颜色变化的对话框消失
                         cw = CloseWindow(index - 1)
                         temp = block[i-1].replace(SCEwords.fade_in, '')

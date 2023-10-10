@@ -33,6 +33,7 @@ class ImageData(object):
         self.word = bool(False)
         self.dialogue = bool(False)
         self.first_letter_mat = None
+        self.abs_first_letter_mat = 0
 
     def __read_pixel(frame, x1, x2, y1, y2):
         #判断四个点是否为白色，如果四个都是，返回true，否则返回false
@@ -110,7 +111,7 @@ class ImageData(object):
     def is_word(self, var):
         #判断文字
         if not self.dialogue:
-            return self.word, self.first_letter_mat
+            return self.word, self.first_letter_mat, self.abs_first_letter_mat
         if self.method == 'ColorDetect':
             img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
         elif self.method == 'TemplateMatch':
@@ -118,16 +119,17 @@ class ImageData(object):
             img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
         ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
         self.first_letter_mat = img[0:var,var:var*3]
+        self.abs_first_letter_mat = count_nonzero(self.first_letter_mat)
         if count_nonzero(img) >= 50:
             self.word = bool(True)
-        return self.word, self.first_letter_mat
+        return self.word, self.first_letter_mat, self.abs_first_letter_mat
 
     def get_detailed_data(self, f, ms):
         #获得详细数据
         if self.method == 'ColorDetect':
-            return {'Frame':f, 'MiliSecond':ms, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
+            return {'Frame':f, 'MiliSecond':ms, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'NonZeroFirstLetter':self.abs_first_letter_mat, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
         if self.method == 'TemplateMatch':
-            return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word} #模板匹配法
+            return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word, 'NonZeroFirstLetter':self.abs_first_letter_mat,} #模板匹配法
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条
@@ -187,7 +189,7 @@ class ImageSections(QObject):
         if read_method == ImageSections.TEMPLATE_MATCH:
             prev_frame.set_canny(tmp_canny) #模板匹配法
         prev_frame.dialogue = prev_frame.is_dialogue()
-        prev_frame.word, prev_frame.first_letter_mat = prev_frame.is_word(var)
+        prev_frame.word, prev_frame.first_letter_mat, prev_frame.abs_first_letter_mat = prev_frame.is_word(var)
 
         start = ''
         end = ''
@@ -203,7 +205,7 @@ class ImageSections(QObject):
                 if read_method == ImageSections.TEMPLATE_MATCH:
                     curr_frame.set_canny(tmp_canny) #模板匹配法
                 curr_frame.dialogue = curr_frame.is_dialogue()
-                curr_frame.word, curr_frame.first_letter_mat = curr_frame.is_word(var)
+                curr_frame.word, curr_frame.first_letter_mat, curr_frame.abs_first_letter_mat = curr_frame.is_word(var)
                 if generate_detailed_data:
                     data_li.append(curr_frame.get_detailed_data(f, ms))
                 if curr_frame.dialogue == prev_frame.dialogue:
@@ -211,16 +213,21 @@ class ImageSections(QObject):
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             #判断文本更新
                             end = ms
-                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
-                            start = ms
-                            spec = {}
-                            word_count += 1
-                        elif not (prev_frame.first_letter_mat == curr_frame.first_letter_mat).all() and count_nonzero(prev_frame.first_letter_mat) - count_nonzero(curr_frame.first_letter_mat) > 50:
+                            if end - start >= 200:
+                                #过滤掉因为白屏造成的过短section
+                                image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
+                                start = ms
+                                spec = {}
+                                word_count += 1
+                        elif not (prev_frame.first_letter_mat == curr_frame.first_letter_mat).all() and prev_frame.abs_first_letter_mat - curr_frame.abs_first_letter_mat > 50:
+                            #针对某些录屏，出现切换句子时第一个字直接显示无空白帧的情况
                             end = ms
-                            image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
-                            start = ms
-                            spec = {}
-                            word_count += 1
+                            if end - start >= 200:
+                                #过滤掉因为白屏造成的过短section
+                                image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
+                                start = ms
+                                spec = {}
+                                word_count += 1
                 else:
                     if curr_frame.dialogue:
                         #前一帧不是对话框，当前帧是对话框，判断对话框出现
@@ -265,7 +272,11 @@ class ImageSections(QObject):
         for r in remove_li:
             img_sections.remove(r)
             if len(remove_subli) == 0 or remove_subli[-1]['Index'] + 1 == r['Index']:
-                remove_subli.append(r)
+                if len(remove_subli) > 0 and r['Start'] - remove_subli[-1]['End'] >= 600:
+                    #过滤掉间隔时间过长的连续短section
+                    continue
+                else:
+                    remove_subli.append(r)
             else:
                 if len(remove_subli) >= 2:
                     tmp.append(remove_subli)
