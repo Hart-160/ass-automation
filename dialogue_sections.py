@@ -233,6 +233,16 @@ class DialogueSections:
                                 jit.amplitude = amplitude
                     event_list.append(jit.get_dict())
 
+                if SCEwords.font_size in line:
+                    # 判断字体大小变化
+                    temp1 = line.find(SCEwords.font_size)
+                    temp2 = line.find(SCEwords.end_backup, temp1)
+                    fs = line[temp1:temp2]
+                    fs = fs.split('：')[1]
+                    
+                    fsc = FontSizeChange(index, fs.replace(SCEwords.end, ''))
+                    event_list.append(fsc.get_dict())
+
                 if line.startswith(SCEwords.speaker):
                     temp = line.replace(SCEwords.speaker, '')
                     talker = temp.replace(SCEwords.end, '')

@@ -1,5 +1,4 @@
 import cv2
-import base64
 from numpy import array, count_nonzero, argmax, fromstring, uint8
 from PySide2.QtCore import QObject, Signal
 

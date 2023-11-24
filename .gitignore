@@ -38,14 +38,13 @@ MANIFEST
 *.png
 *.xlsx
 
-test.py
-test2.py
-test_modules.py
+test*.py
 update_git.py
 
 archive tests/
 temp/
 res/
+cache/
 
 [1920x1440]color-test.ass
 settings_color.txt
