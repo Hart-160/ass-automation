@@ -255,11 +255,13 @@ class AssBuilder(QObject):
             open_windows = []
             jitter_list = []
             jitter_im_sections = []
+            font_size_changes = []
             
             #存放index的列表
             change_li = []
             colorfade_li = []
             open_li = []
+            fsc_li = []
 
             #存放字幕行的列表
             ass_dialogue = []
@@ -279,6 +281,8 @@ class AssBuilder(QObject):
                     open_windows.append(d)
                 if d['EventType'] == 'Jitter':
                     jitter_list.append(d)
+                if d['EventType'] == 'FontSizeChange':
+                   font_size_changes.append(d) 
 
             #将对应变化的index加入到列表中，方便后续步骤通过index查询
             if change_windows != []:
@@ -289,6 +293,9 @@ class AssBuilder(QObject):
             if open_windows != []:
                 for op in open_windows:
                     open_li.append(op['Index'])
+            if font_size_changes != []:
+                for fs in font_size_changes:
+                    fsc_li.append(fs['Index'])
 
             #根据剧情文件修正image_section，校验步骤
             if len(dialogue_list) == len(im_sections):
@@ -317,6 +324,18 @@ class AssBuilder(QObject):
                         ims.pop('CloseWindow')
 
             for di, im in zip(dialogue_list, im_sections):
+                fsc_tag = '' #FontSizeChange
+                if font_size_changes != [] and im['Index'] in fsc_li:
+                    if font_size_changes[fsc_li.index(im['Index'])]['FontSize'] != 'Default':
+                        fs_dialog = font_size_changes[fsc_li.index(im['Index'])]['FontSize']
+                        with open(f'[{width}x{height}]untitled.ass', 'r', encoding='utf-8')as f:
+                            lines = f.readlines()
+                            for line in lines:
+                                if 'Style: D4DJ 剧情,' in line:
+                                    fs_img = int(line.split(',')[2])
+                                    break
+                        fsc_tag = '{\\fs'+ str(int(fs_dialog*(fs_img/48))) +'}'
+                
                 if 'CloseWindow' in im:
                     open_offset = 0
                     if 'OpenWindow' in im:
@@ -357,7 +376,7 @@ class AssBuilder(QObject):
                         text_fad = '{\\fad(0,100)}'
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
                     #创建文本行和对应的遮罩行
-                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
+                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
                 elif change_windows != [] and im['Index'] in colorfade_li:
                     #白屏
@@ -385,7 +404,7 @@ class AssBuilder(QObject):
                         text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                         extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
                     fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
-                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = text_fad + di['Body'])
+                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
                 else:
                     open_offset = 0
@@ -395,7 +414,7 @@ class AssBuilder(QObject):
                         open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
                         naming = 'OpenWindow'
                     #创建文本行和对应的遮罩行
-                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], di['Body'])
+                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], text = fsc_tag + di['Body'])
                     shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height))
                 shader = shader.build_comment() #转化为ass内的格式
                 ass_shader.append(shader)
