@@ -235,9 +235,9 @@ class AssBuilder(QObject):
                 logging.info('[ASSautomation] Image Sections generated from Previous Data')
             else:
                 if generate_detailed_data:
-                    raw, data = ImageSections.image_section_generator(video, width, height, generate_detailed_data, video_process_method)
+                    raw, data = ImageSections.image_section_generator(ev_sections, video, width, height, generate_detailed_data, video_process_method)
                 else:
-                    raw = ImageSections.image_section_generator(video, width, height, generate_detailed_data, video_process_method)
+                    raw = ImageSections.image_section_generator(ev_sections, video, width, height, generate_detailed_data, video_process_method)
                 AssBuilder.__write_temp('temp\\' + os.path.split(video)[1] + '.data', raw)
                 logging.info('[ASSautomation] RAW Image Sections data written')
                 im_sections, alert_li = ImageSections.jitter_cleaner(raw)

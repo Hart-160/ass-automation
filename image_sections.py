@@ -137,6 +137,16 @@ class ImageSections(QObject):
     COLOR_DETECT = 'ColorDetect' #定位识别法
     TEMPLATE_MATCH = 'TemplateMatch' #模板匹配法
 
+    main_chara_dict = {'りんく': 11, '真秀': 12, 'むに': 13, '麗': 14, 
+                       '響子': 21, 'しのぶ': 22, '由香': 23, '絵空': 24, 
+                       '咲姫': 31, '衣舞紀': 32, '乙和': 33, 'ノア': 34, 
+                       'リカ': 41, '茉莉花': 42, 'さおり': 43, 'ダリア': 44, 
+                       '椿': 51, '渚': 52, '緋彩': 53, '葵依': 54, 
+                       '美夢': 61, '春奈': 62, '胡桃': 63, 'みいこ': 64, 
+                       '愛莉': 811, '茉奈': 812, '紗乃': 821, '灯佳': 822, 
+                       'ミチル': 831, 'ルミナ': 82, '心愛': 83, 'はやて': 84, 
+                       'ネオ': 91, 'ソフィア': 92, 'エルシィ': 93, 'ヴェロニカ': 94}
+
     def __Merge(dict1, dict2): 
         res = {**dict1, **dict2} 
         return res 
@@ -146,16 +156,25 @@ class ImageSections(QObject):
         tmp_canny = cv2.Canny(tmp, 100, 200)
         return tmp_canny
 
-    def image_section_generator(vid, width, height, generate_detailed_data=False, read_method=None):
+    def image_section_generator(ev_sections, vid, width, height, generate_detailed_data=False, read_method=None):
         '''
         输入视频路径，返回一个包含各节点的列表
         '''
+        dialogue_list = []
+        for d in ev_sections:
+            if d['EventType'] == 'Dialogue':
+                dialogue_list.append(d)
+        
         cap = cv2.VideoCapture(vid)
         total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         pb.setmax.emit(total_frame)
 
         image_sections = []
         word_count = 1
+        
+        valid_section_count = 1 #跳帧时用于计算有效section数量
+        key_change_frame = 0
+        jumped = False
 
         # data_li是拿来输出更详细的视频读取数据的
         if generate_detailed_data:
@@ -212,32 +231,72 @@ class ImageSections(QObject):
                         if curr_frame.word == False and prev_frame.word != curr_frame.word:
                             #判断文本更新
                             end = ms
-                            if end - start >= 200:
+                            key_change_frame = f
+                            jumped = False
+                            if float(end) - float(start) >= 200:
                                 #过滤掉因为白屏造成的过短section
                                 image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
+                                if float(end) - float(start) >= 1000.0:
+                                    valid_section_count += 1
                                 start = ms
                                 spec = {}
                                 word_count += 1
                         elif not (prev_frame.first_letter_mat == curr_frame.first_letter_mat).all() and prev_frame.abs_first_letter_mat - curr_frame.abs_first_letter_mat > 50:
                             #针对某些录屏，出现切换句子时第一个字直接显示无空白帧的情况
                             end = ms
-                            if end - start >= 200:
+                            key_change_frame = f
+                            jumped = False
+                            if float(end) - float(start) >= 200:
                                 #过滤掉因为白屏造成的过短section
                                 image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
+                                if float(end) - float(start) >= 1000.0:
+                                    valid_section_count += 1
                                 start = ms
                                 spec = {}
                                 word_count += 1
+                        elif not jumped and f - key_change_frame >= 45:
+                            """
+                            跳帧备忘：
+                            - 游戏内打字机间隔为80ms，换行符为100ms
+                            - 无声时打字机出完后会留1000ms换下一行（有声则是声音播完后的1000ms换行）
+                            - 有声时说话平均间隔为150ms
+                            """
+                            
+                            talker = dialogue_list[valid_section_count-1]['Talker']
+                            text = dialogue_list[valid_section_count-1]['Body']
+                            
+                            if talker in ImageSections.main_chara_dict:
+                                skip_per_char = 140
+                            else:
+                                skip_per_char = 70
+                                
+                            enter_count = text.count('\\N')
+                            text_length = len(text) - enter_count*3
+                            jump_time = float(skip_per_char * text_length + 90 * enter_count)
+                            jump_frame = int((jump_time / 1000.0) * 60)
+                            for i in range(jump_frame):
+                                success = cap.grab()
+                                pb.update_bar.emit(f+i)
+                            
+                            jumped = True
+                            continue
                 else:
                     if curr_frame.dialogue:
                         #前一帧不是对话框，当前帧是对话框，判断对话框出现
                         start = ms
+                        key_change_frame = f
+                        jumped = False
                         spec = {'OpenWindow':True}
                     else:
                         #前一帧是对话框，当前帧不是对话框，判断对话框消失
                         end = ms
+                        key_change_frame = f
+                        jumped = False
                         spec = ImageSections.__Merge(spec, {'CloseWindow':True})
                         image_sections.append(ImageSections.__Merge({'Index':word_count,'Start':start, 'End':end, 'Length':end-start}, spec))
                         word_count += 1
+                        if float(end) - float(start) >= 1000.0:
+                            valid_section_count += 1
                 prev_frame = curr_frame
             except cv2.error:
                 pb.update_bar.emit(total_frame)
