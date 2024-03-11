@@ -2,6 +2,7 @@ import json
 import logging
 import os
 import time
+import copy
 
 import cv2
 from PIL import ImageFont
@@ -209,6 +210,7 @@ class AssBuilder(QObject):
             ab.text_output.emit('Reference: ' + sh.AutoRead.get_preferred_ref(width, height))
             #获取sce分析列表
             ev_sections = DialogueSections.sce_handler(sce)
+            original_ev_sections = copy.deepcopy(ev_sections) #复制一份日文原文的sce分析列表，用于跳帧计算
             logging.info('[ASSautomation] Dialogue Sections generated')
             if template != None:
                 try:
@@ -235,9 +237,9 @@ class AssBuilder(QObject):
                 logging.info('[ASSautomation] Image Sections generated from Previous Data')
             else:
                 if generate_detailed_data:
-                    raw, data = ImageSections.image_section_generator(ev_sections, video, width, height, generate_detailed_data, video_process_method)
+                    raw, data = ImageSections.image_section_generator(original_ev_sections, video, width, height, generate_detailed_data, video_process_method)
                 else:
-                    raw = ImageSections.image_section_generator(ev_sections, video, width, height, generate_detailed_data, video_process_method)
+                    raw = ImageSections.image_section_generator(original_ev_sections, video, width, height, generate_detailed_data, video_process_method)
                 AssBuilder.__write_temp('temp\\' + os.path.split(video)[1] + '.data', raw)
                 logging.info('[ASSautomation] RAW Image Sections data written')
                 im_sections, alert_li = ImageSections.jitter_cleaner(raw)
