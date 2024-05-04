@@ -266,9 +266,9 @@ class ImageSections(QObject):
                             text = dialogue_list[valid_section_count-1]['Body']
                             
                             if talker in ImageSections.main_chara_dict:
-                                skip_per_char = 140
+                                skip_per_char = 2*int(sh.Settings.settings_reader(sh.Settings.SKIP_FRAME_PER_CHARACTER))
                             else:
-                                skip_per_char = 70
+                                skip_per_char = int(sh.Settings.settings_reader(sh.Settings.SKIP_FRAME_PER_CHARACTER))
                                 
                             enter_count = text.count('\\N')
                             text_length = len(text) - enter_count*3

@@ -54,6 +54,7 @@ class Settings(object):
     BLACK_FADEIN_OFFSET = '[Black Fade-in Offset]'
     DEFAULT_WHITE_THRESHOLD = '[Default White Threshold]'
     NAME_STYLES = '[Name Styles]'
+    SKIP_FRAME_PER_CHARACTER = '[Skip Frame Per Character]'
 
     def settings_reader(parameter, width = None, height = None) ->str:
         #根据给定参数寻找对应的设置
