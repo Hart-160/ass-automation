@@ -128,6 +128,8 @@ class DialogueSections:
                 lees.append(subli)
                 subli = []
             else:
+                if l.startswith('\t'):
+                    l = l.replace('\t', '')
                 if l.startswith(SCEwords.background_name):
                     continue
                 if l.startswith(SCEwords.live2d_disappear):
@@ -145,8 +147,6 @@ class DialogueSections:
                 if l.startswith(SCEwords.sync_end):
                     continue
                 if l.startswith('}'):
-                    continue
-                if l.startswith('\t'):
                     continue
                 else:
                     subli.append(l)
