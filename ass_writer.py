@@ -500,6 +500,19 @@ class AssBuilder(QObject):
                 data = f.readlines()
             new_name = os.path.join(route, video + '.ass')
 
+            #在源文件中预加载视频信息
+            for i in range(len(data)):
+                if data[i].startswith('WrapStyle'):
+                    data.insert(i+1, f'PlayResX: {width}\n')
+                    data.insert(i+2, f'PlayResY: {height}\n')
+                    break
+                        
+            for j in range(len(data)):
+                if data[j].startswith('Last Style Storage'):
+                    data.insert(j+1, f'Audio File: {os.path.split(video)[1]}\n')
+                    data.insert(j+2, f'Video File: {os.path.split(video)[1]}\n')
+                    break
+                    
             pop_instruction = 1
             log_infos.append('TASK-VIDEO = {}'.format(vid_name))
             if use_temp:
