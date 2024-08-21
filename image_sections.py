@@ -1,6 +1,9 @@
 import cv2
-from numpy import array, count_nonzero, argmax, fromstring, uint8
+import os
+import shutil
+from numpy import array, count_nonzero, argmax, fromstring, uint8, empty
 from PySide2.QtCore import QObject, Signal
+from PIL import Image, ImageFont, ImageDraw
 
 import settings_handler as sh
 from asset_data import B64_Images
@@ -9,16 +12,73 @@ from asset_data import B64_Images
 这个部分负责分析视频
 '''
 
+class TextTemplate(object):
+
+    def generate_text_image(text:str, var:int, suffix=0) -> str:
+        if len(text) == 0:
+            return
+        
+        image = Image.new('RGB', (var*len(text)+1, var+1), (0,0,0))
+        font = ImageFont.truetype("Aegisub stuffs/FOT-RodinNTLG Pro B.otf", var)
+        draw = ImageDraw.Draw(image)
+
+        if not os.path.exists('cache'):
+            os.mkdir('cache')
+        
+        draw.text((0,0), text, 'white', font)
+        template_route = f'cache/temp_{suffix}.png'
+        
+        image.save(template_route)
+        
+    def generate_text_image_batch(ev_sections, width, height):
+        #只适用于カードイラスト表示
+        
+        dialogue_list = []
+        font_size_change_list = []
+        for d in ev_sections:
+            if d['EventType'] == 'Dialogue':
+                dialogue_list.append(d)
+            if d['EventType'] == 'FontSizeChange':
+                font_size_change_list.append(d)
+
+        talker_list = []
+        talker_dict = {}
+        text_list = []
+        for d in dialogue_list:
+            if not d['Talker'] in talker_list:
+                talker_list.append(d['Talker'])
+            text_list.append({'Index':d['Index'], 'Text':d['Body'][:2]})
+        for i in range(len(talker_list)):
+            talker_dict[talker_list[i]] = i+1
+
+        var = int(sh.Reference.reference_reader(sh.Reference.SCREEN_VARIABLE, width, height))
+
+        for i in range(len(talker_list)):
+            TextTemplate.generate_text_image(talker_list[i], var, f"0{talker_dict[talker_list[i]]}")
+        for t in text_list:
+            change_index = 1
+            for f in font_size_change_list:
+                if f['Index'] == t['Index'] and f['FontSize'] != 'Default':
+                    change_index = f['FontSize']/48
+                    break
+            TextTemplate.generate_text_image(t['Text'], int(var*change_index), t['Index'])
+
+        return talker_dict
+
 class ImageData(object):
     '''
     对一帧进行对话框和文字判定
     '''
     def __init__(self, image, lower_range, upper_range, white_threshold, 
                  width, height,
-                 word_points:tuple, border_points:tuple, read_method) -> None:
+                 word_points:tuple, border_points:tuple, window_type, read_method) -> None:
         self.x1b, self.y1b, self.x2b, self.y2b = border_points
         self.x1w, self.y1w, self.x2w, self.y2w = word_points
         self.method = read_method
+        self.window_type = window_type
+
+        self.width = width
+        self.height = height
 
         self.image = image
         if self.method == 'ColorDetect':
@@ -31,7 +91,7 @@ class ImageData(object):
         self.white_threshold = white_threshold
         self.word = bool(False)
         self.dialogue = bool(False)
-        self.first_letter_mat = None
+        self.first_letter_mat = empty([0,0])
         self.abs_first_letter_mat = 0
 
     def __read_pixel(frame, x1, x2, y1, y2):
@@ -101,34 +161,68 @@ class ImageData(object):
         return self.dialogue
     #'''
 
-    def is_dialogue(self):
-        if self.method == 'ColorDetect':
-            return self.is_dialogue_color()
-        if self.method == 'TemplateMatch':
-            return self.is_dialogue_template()
+    def __is_true_card_showcase(self, template_image, parameter=''):
+        image = self.image
+        if parameter == 'name':
+            image = image[int(self.height*float(sh.Reference.reference_reader(sh.Reference.CARD_DISPLAY_CUT_UPPER_FACTOR, self.width, self.height))):int(self.height*float(sh.Reference.reference_reader(sh.Reference.CARD_DISPLAY_CUT_LOWER_FACTOR, self.width, self.height))), 0:self.width]
+        elif parameter == 'text':
+            image = image[int(self.height*float(sh.Reference.reference_reader(sh.Reference.CARD_DISPLAY_CUT_LOWER_FACTOR, self.width, self.height))):self.height, 0:self.width]
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        tmp = cv2.imread(template_image)
+        tmp = cv2.cvtColor(tmp, cv2.COLOR_BGR2GRAY)
+        
+        res = cv2.matchTemplate(gray, tmp, cv2.TM_CCOEFF_NORMED)
+        min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(res)
 
-    def is_word(self, var):
+        return max_val > 0.7
+
+    def is_dialogue(self, dialogue_list, index=-1, talker_dict=None):
+        if self.window_type == 'ウインドウ1':
+            if self.method == 'ColorDetect':
+                return self.is_dialogue_color()
+            if self.method == 'TemplateMatch':
+                return self.is_dialogue_template()
+        elif "カード" in self.window_type: #カードイラスト表示
+            self.dialogue = self.__is_true_card_showcase(f'cache/temp_0{talker_dict[dialogue_list[index-1]["Talker"]]}.png', 'name')
+            if not self.dialogue:
+                self.dialogue = self.__is_true_card_showcase(f'cache/temp_0{talker_dict[dialogue_list[index]["Talker"]]}.png', 'name')
+            return self.dialogue
+        else:
+            return self.dialogue #False
+
+    def is_word(self, var, dialogue_list, index=-1):
         #判断文字
-        if not self.dialogue:
+        if self.window_type == 'ウインドウ1':
+            if not self.dialogue:
+                return self.word, self.first_letter_mat, self.abs_first_letter_mat
+            if self.method == 'ColorDetect':
+                img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
+            elif self.method == 'TemplateMatch':
+                img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #模板匹配法
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
+            ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
+            self.first_letter_mat = img[0:var,var:var*3]
+            self.abs_first_letter_mat = count_nonzero(self.first_letter_mat)
+            if count_nonzero(img) >= 50:
+                self.word = bool(True)
             return self.word, self.first_letter_mat, self.abs_first_letter_mat
-        if self.method == 'ColorDetect':
-            img = self.gray[0:self.y2w-self.y1w-1, self.x1w-self.x1b+3:self.x2w-self.x1b+3] #定位法
-        elif self.method == 'TemplateMatch':
-            img = self.image[self.y1w:self.y2w, self.x1w:self.x2w] #模板匹配法
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) #模板匹配法
-        ret, img = cv2.threshold(img, 80, 255, cv2.THRESH_BINARY_INV)
-        self.first_letter_mat = img[0:var,var:var*3]
-        self.abs_first_letter_mat = count_nonzero(self.first_letter_mat)
-        if count_nonzero(img) >= 50:
-            self.word = bool(True)
-        return self.word, self.first_letter_mat, self.abs_first_letter_mat
+        elif "カード" in self.window_type: #カードイラスト表示
+            if not self.dialogue:
+                return self.word, self.first_letter_mat, self.abs_first_letter_mat
+            self.word = self.__is_true_card_showcase(f'cache/temp_{dialogue_list[index-1]["Index"]}.png', 'text')
+            return self.word, self.first_letter_mat, self.abs_first_letter_mat
+        else:
+            return self.word, self.first_letter_mat, self.abs_first_letter_mat
 
-    def get_detailed_data(self, f, ms):
+    def get_detailed_data(self, f, ms, window_type):
         #获得详细数据
-        if self.method == 'ColorDetect':
-            return {'Frame':f, 'MiliSecond':ms, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'NonZeroFirstLetter':self.abs_first_letter_mat, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
-        if self.method == 'TemplateMatch':
-            return {'Frame':f, 'MiliSecond':ms, 'IsDialogue':self.dialogue,'IsWord':self.word, 'NonZeroFirstLetter':self.abs_first_letter_mat,} #模板匹配法
+        if window_type == 'ウインドウ1':
+            if self.method == 'ColorDetect':
+                return {'Frame':f, 'MiliSecond':ms, 'WindowType':window_type, 'IsValidColor':self.valid_color, 'IsValidWhite':self.valid_white,'IsWord':self.word, 'NonZeroFirstLetter':self.abs_first_letter_mat, 'BorderColor':self.border_color, 'BorderWhite':self.border_white} #定位法
+            if self.method == 'TemplateMatch':
+                return {'Frame':f, 'MiliSecond':ms, 'WindowType':window_type, 'IsDialogue':self.dialogue,'IsWord':self.word, 'NonZeroFirstLetter':self.abs_first_letter_mat,} #模板匹配法
+        elif "カード" in window_type: #カードイラスト表示
+            return {'Frame':f, 'MiliSecond':ms, 'WindowType':window_type, 'IsDialogue':self.dialogue,'IsWord':self.word,}
 
 class ImageSections(QObject):
     update_bar = Signal(int) #向GUI发送进度，更新进度条
@@ -162,9 +256,15 @@ class ImageSections(QObject):
         输入视频路径，返回一个包含各节点的列表
         '''
         dialogue_list = []
+        window_type_list = []
+        
         for d in ev_sections:
             if d['EventType'] == 'Dialogue':
                 dialogue_list.append(d)
+        
+        for d in dialogue_list:
+            if not d['WindowType'] in window_type_list:
+                window_type_list.append(d['WindowType'])
         
         cap = cv2.VideoCapture(vid)
         total_frame = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
@@ -172,6 +272,12 @@ class ImageSections(QObject):
 
         image_sections = []
         word_count = 1
+        
+        talker_dict = {}
+        for w in  window_type_list:
+            if "カード" in w:
+                talker_dict = TextTemplate.generate_text_image_batch(ev_sections, width, height)
+                break
         
         valid_section_count = 1 #跳帧时用于计算有效section数量
         key_change_frame = 0
@@ -204,11 +310,12 @@ class ImageSections(QObject):
         success, p_frame = cap.read()
         f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
         pb.update_bar.emit(f)
-        prev_frame = ImageData(p_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points, read_method)
+        window_type = dialogue_list[valid_section_count-1]['WindowType']
+        prev_frame = ImageData(p_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points, window_type, read_method)
         if read_method == ImageSections.TEMPLATE_MATCH:
             prev_frame.set_canny(tmp_canny) #模板匹配法
-        prev_frame.dialogue = prev_frame.is_dialogue()
-        prev_frame.word, prev_frame.first_letter_mat, prev_frame.abs_first_letter_mat = prev_frame.is_word(var)
+        prev_frame.dialogue = prev_frame.is_dialogue(dialogue_list, index=valid_section_count, talker_dict=talker_dict)
+        prev_frame.word, prev_frame.first_letter_mat, prev_frame.abs_first_letter_mat = prev_frame.is_word(var, dialogue_list, index=valid_section_count)
 
         start = ''
         end = ''
@@ -220,11 +327,13 @@ class ImageSections(QObject):
                 ms = cap.get(cv2.CAP_PROP_POS_MSEC)
                 f = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
                 pb.update_bar.emit(f)
-                curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points, read_method)
+                if valid_section_count <= len(dialogue_list):
+                    window_type = dialogue_list[valid_section_count-1]['WindowType']
+                curr_frame = ImageData(c_frame, lower_r, upper_r, white_gate, width, height, word_points, border_points, window_type, read_method)
                 if read_method == ImageSections.TEMPLATE_MATCH:
                     curr_frame.set_canny(tmp_canny) #模板匹配法
-                curr_frame.dialogue = curr_frame.is_dialogue()
-                curr_frame.word, curr_frame.first_letter_mat, curr_frame.abs_first_letter_mat = curr_frame.is_word(var)
+                curr_frame.dialogue = curr_frame.is_dialogue(dialogue_list, index=valid_section_count, talker_dict=talker_dict)
+                curr_frame.word, curr_frame.first_letter_mat, curr_frame.abs_first_letter_mat = curr_frame.is_word(var, dialogue_list, index=valid_section_count)
                 if generate_detailed_data:
                     data_li.append(curr_frame.get_detailed_data(f, ms))
                 if curr_frame.dialogue == prev_frame.dialogue:
@@ -242,7 +351,7 @@ class ImageSections(QObject):
                                 start = ms
                                 spec = {}
                                 word_count += 1
-                        elif not (prev_frame.first_letter_mat == curr_frame.first_letter_mat).all() and prev_frame.abs_first_letter_mat - curr_frame.abs_first_letter_mat > 50:
+                        elif (prev_frame.first_letter_mat.any() or curr_frame.first_letter_mat.any()) and not (prev_frame.first_letter_mat == curr_frame.first_letter_mat).all() and prev_frame.abs_first_letter_mat - curr_frame.abs_first_letter_mat > 50:
                             #针对某些录屏，出现切换句子时第一个字直接显示无空白帧的情况
                             end = ms
                             key_change_frame = f
@@ -306,6 +415,8 @@ class ImageSections(QObject):
                 pb.update_bar.emit(total_frame)
                 break
         cap.release()
+        if os.path.exists('cache'):
+            shutil.rmtree('cache')
 
         if generate_detailed_data:
             return image_sections, data_li

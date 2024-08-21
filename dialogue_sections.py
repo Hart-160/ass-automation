@@ -14,9 +14,10 @@ class Event(object):
         return {'Index':self.index, 'EventType':self.event_type}
 
 class Dialogue(Event):
-    def __init__(self, index, talker, body) -> None:
+    def __init__(self, index, window_type, talker, body) -> None:
         super().__init__(index)
         self.event_type = 'Dialogue'
+        self.window_type = window_type
         self.talker = talker
         self.body = body
 
@@ -25,7 +26,7 @@ class Dialogue(Event):
         return str.join(self.body)
 
     def get_dict(self):
-        return {'Index':self.index, 'EventType':self.event_type, 'Talker':self.talker, 'Body':self.body}
+        return {'Index':self.index, 'EventType':self.event_type, 'WindowType':self.window_type, 'Talker':self.talker, 'Body':self.body}
 
 class CloseWindow(Event):
     def __init__(self, index, color = None, fade = None) -> None:
@@ -171,6 +172,7 @@ class DialogueSections:
         event_list = []
         index = 1
         talker = ''
+        window_type = ''
 
         for block in lis:
             body = []
@@ -214,6 +216,9 @@ class DialogueSections:
 
                 if SCEwords.open_window in line:
                     # 判断对话框弹出
+                    
+                    window_type = line.split(SCEwords.open_window)[1].split('、')[0]
+                    
                     ow = OpenWindow(index)
                     event_list.append(ow.get_dict())
 
@@ -264,7 +269,7 @@ class DialogueSections:
 
             if body == []:
                 continue
-            dialogue = Dialogue(index, talker, body)
+            dialogue = Dialogue(index, window_type, talker, body)
             dialogue.body = dialogue.build_body()
             event_list.append(dialogue.get_dict())
             index += 1

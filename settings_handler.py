@@ -96,6 +96,8 @@ class Reference(object):
     TEXT_WORD_MX = '[TEXT WORD MX]'
     TEXT_BORDER_MX = '[TEXT BORDER MX]'
     TEMPLATE_DETECT_CUT_FACTOR = '[TEMPLATE DETECT CUT FACTOR]'
+    CARD_DISPLAY_CUT_UPPER_FACTOR = '[CARD DISPLAY CUT UPPER FACTOR]'
+    CARD_DISPLAY_CUT_LOWER_FACTOR = '[CARD DISPLAY CUT LOWER FACTOR]'
 
     def reference_reader(parameter, width = None, height = None) ->str:
         #根据给定参数寻找对应的设置
