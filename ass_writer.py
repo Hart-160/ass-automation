@@ -108,8 +108,9 @@ class AssBuilder(QObject):
         tstamp = '{}:{}:{}.{}'.format(hr, m, s, ms)
         return tstamp
     
-    def __shader_builder(talker:str, width, height):
+    def __shader_builder_normal(talker:str, width, height):
         '''
+        ウインドウ1
         根据名字长度以及以分辨率为基础的reference生成随名字长度变化的遮罩字幕
         '''
         x1b, x2b = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.SCREEN_INITIAL, width, height))
@@ -124,9 +125,26 @@ class AssBuilder(QObject):
         x3 = x3b + int(length)
 
         effect = '{\\p1}'
-        shelter_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT, width, height).format(x1, x2, x3)
+        shader_template = sh.Reference.reference_reader(sh.Reference.SCREEN_TEXT, width, height).format(x1, x2, x3)
 
-        return effect + shelter_template
+        return effect + shader_template
+
+    def __shader_builder_card_showcase(width, height):
+        '''
+        カードイラスト表示
+        '''
+        
+        effect = '{\\p1}'
+        shader_template = sh.Reference.reference_reader(sh.Reference.CARD_DISPLAY_SCREEN_TEXT, width, height)
+        
+        return effect + shader_template
+
+    def __get_pos_tag(width, height):
+        '''
+        根据分辨率获取字幕位置标签
+        '''
+        x, y = sh.Reference.shader_splitter(sh.Reference.reference_reader(sh.Reference.CARD_DISPLAY_TEXT_POSITION, width, height))
+        return '{\\pos(' + str(x) + ',' + str(y) + ')}'
 
     def __write_log(infos:list):
         '''
@@ -340,7 +358,7 @@ class AssBuilder(QObject):
                 
                 if 'CloseWindow' in im:
                     open_offset = 0
-                    if 'OpenWindow' in im:
+                    if 'OpenWindow' in im and di['WindowType'] == 'ウインドウ1':
                         open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
 
                     if change_windows != [] and im['Index'] in colorfade_li:
@@ -378,8 +396,12 @@ class AssBuilder(QObject):
                         text_fad = '{\\fad(0,100)}'
                         fade_offset = int(sh.Settings.settings_reader(sh.Settings.NORMAL_CLOSE_OFFSET))
                     #创建文本行和对应的遮罩行
-                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'])
-                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
+                    if 'カード' in di['WindowType']:
+                        line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'] + AssBuilder.__get_pos_tag(width, height))
+                        shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder_card_showcase(width, height) + extra_fad)
+                    else:
+                        line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'])
+                        shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder_normal(di['Talker'], width, height) + extra_fad)
                 elif change_windows != [] and im['Index'] in colorfade_li:
                     #白屏
                     if change_windows[change_li.index(im['Index'])]['Color'] == '黒':
@@ -406,18 +428,26 @@ class AssBuilder(QObject):
                         text_fad = '{\\fad(0,' + str(100 + int(base_fade_amount * multiply_index)) + ')}'
                         extra_cut = int(base_cut_amount - base_cut_amount * multiply_index)
                     fade_offset = int(sh.Settings.settings_reader(sh.Settings.BLACK_FADEIN_OFFSET)) - extra_cut
-                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'])
-                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height) + extra_fad)
+                    if 'カード' in di['WindowType']:
+                        line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'] + AssBuilder.__get_pos_tag(width, height))
+                        shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder_card_showcase(width, height) + extra_fad)
+                    else:
+                        line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), di['Talker'], text = fsc_tag + text_fad + di['Body'])
+                        shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End'] + fade_offset), name=naming, text=AssBuilder.__shader_builder_normal(di['Talker'], width, height) + extra_fad)
                 else:
                     open_offset = 0
                     naming = None
-                    if 'OpenWindow' in im:
+                    if 'OpenWindow' in im and di['WindowType'] == 'ウインドウ1':
                         #对话框出现
                         open_offset = int(sh.Settings.settings_reader(sh.Settings.OPEN_BOX_OFFSET))
                         naming = 'OpenWindow'
                     #创建文本行和对应的遮罩行
-                    line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], text = fsc_tag + di['Body'])
-                    shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder(di['Talker'], width, height))
+                    if 'カード' in di['WindowType']:
+                        line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], text = fsc_tag + di['Body'] + AssBuilder.__get_pos_tag(width, height))
+                        shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder_card_showcase(width, height))
+                    else:
+                        line = Dialogue(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), di['Talker'], text = fsc_tag + di['Body'])
+                        shader = Shader(AssBuilder.__get_tstamp(im['Start'] + open_offset), AssBuilder.__get_tstamp(im['End']), name=naming, text=AssBuilder.__shader_builder_normal(di['Talker'], width, height))
                 shader = shader.build_comment() #转化为ass内的格式
                 ass_shader.append(shader)
                 line = line.build_dialogue() #转化为ass内的格式

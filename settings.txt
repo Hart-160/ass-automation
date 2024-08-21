@@ -23,7 +23,7 @@ automatic
 410
 
 [Skip Frame Per Character] ms
-0
+60
 
 [Name Styles] chara-name style-name (space between names)
 りんく 愛本りんく
